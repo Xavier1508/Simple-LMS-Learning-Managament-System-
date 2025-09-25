@@ -4,7 +4,7 @@ Welcome to Simple LMS. This project is a lightweight Learning Management System 
 
 A key requirement for this course is a peer-security audit, where other teams will review our code to identify potential vulnerabilities. For this reason, the initial version of this application is intentionally built using native PHP, HTML, CSS, and JavaScript. This approach ensures that the core logic is transparent and accessible for auditing, without the abstraction of modern frameworks. The long-term plan is to refactor this project using the Laravel framework after the initial security assessment is complete.
 
-![image](https://i.imgur.com/your-image-link.png) ## Key Features
+## Key Features
 
 - **User Authentication**: A secure registration and login system for users.
 - **Modern Project Structure**: Implements the Front Controller pattern (`public/index.php`) to create a single point of entry, enhancing security and organization.
