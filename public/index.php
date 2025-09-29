@@ -19,6 +19,14 @@ switch ($request_uri) {
     case '/terms':
         require_once __DIR__ . '/../views/pages/terms_of_use.php';
         break;
+
+    case '/home':
+        require_once __DIR__ . '/../views/pages/home.php';
+        break;
+
+    case '/courses':
+        require_once __DIR__ . '/../views/pages/courses.php';
+        break;
     
     //Counter error 404 kalo gaada page yang sesuai
     default:
