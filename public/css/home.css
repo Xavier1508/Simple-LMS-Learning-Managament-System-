@@ -1,0 +1,178 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.topbar {
+    width: 100%;
+    height: 60px;
+    background: #f5f6fa;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.topbar .logo {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #000;
+}
+
+.sidebar {
+    width: 220px;
+    background: #2c3e50;
+    color: #fff;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    margin: 1rem 0;
+}
+
+.sidebar ul li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    font-size: 1rem;
+    display: block;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.sidebar ul li a:hover {
+    background: #34495e;
+}
+
+.dashboard {
+    flex: 1;
+    padding: 1.5rem;
+    margin-left: 220px; /* space for sidebar */
+    margin-top: 60px;  /* space for topbar */
+    background: #f5f6fa;
+    min-height: calc(100vh - 60px);
+}
+
+.dashboard h1 {
+    margin-bottom: 0.5rem;
+}
+
+.dashboard h2 {
+    margin: 1rem 0;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.class-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    max-width: 320px;
+}
+
+.class-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+}
+
+.class-card h3 {
+    margin: 0 0 .6rem 0;
+    color: #222;
+    font-size: 1.2rem;
+}
+
+.class-card p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.class-card .btn {
+    display: inline-block;
+    padding: .6rem 1rem;
+    background: #3498DB;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: background 0.2s ease;
+    margin-top: auto;
+}
+
+.class-card .btn:hover {
+    background: #3ea4e7;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 180px;
+    }
+    .dashboard {
+        margin-left: 180px;
+    }
+    .dashboard h1 {
+        font-size: 1.5rem;
+    }
+    .dashboard h2 {
+        font-size: 1.2rem;
+    }
+    .class-card {
+        padding: 1rem;
+        max-width: 100%;
+    }
+    .class-card h3 {
+        font-size: 1.05rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        position: fixed;
+        width: 100%;
+        height: auto;
+        top: 60px;
+        left: 0;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+    .dashboard {
+        margin-left: 0;
+        margin-top: 120px;
+    }
+    .dashboard {
+        padding: 1rem;
+    }
+    .class-card p {
+        font-size: 0.85rem;
+    }
+    .class-card .btn {
+        font-size: 0.85rem;
+        padding: .5rem 0.8rem;
+    }
+}
