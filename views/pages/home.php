@@ -1,4 +1,6 @@
 <?php
+
+//INI DASHBOARD YG LAMA TANPA TAILWIND
 $pageTitle = 'Dashboard';
 $cssFile = 'home.css';
 $jsFile = 'home.js';

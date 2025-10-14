@@ -1,50 +1,162 @@
 <?php
 $pageTitle = 'Courses';
-$cssFile = 'courses.css';
-$jsFile = 'courses.js';
 require_once __DIR__ . '/../layouts/header.php';
-
-//course dummy, kalo databasenya udah jadi diganti aja
-$courses = [
-    ["id" => 1, "title" => "Operating Systems", "description" => "Windows, Linux, macOS"],
-    ["id" => 2, "title" => "Secure Programming", "description" => "Programming secure."],
-    ["id" => 3, "title" => "Compilation Techniques", "description" => "Teknik kompilasi"],
-    ["id" => 4, "title" => "Network Penetration Testing", "description" => "Pentest bersama Ko CP :)"],
-    ["id" => 5, "title" => "Blockchain Technology", "description" => "Aku mau bitcoin gratis"],
-    ["id" => 6, "title" => "Entrepreneurship", "description" => "Aku mau duit gratis"],
-    ["id" => 7, "title" => "Computer Forensics", "description" => "Kapolres garuda dikeroyok warga"],
-    ["id" => 8, "title" => "Reverse Engineering", "description" => "Assembly :("],
-];
 ?>
 
-<div class="layout">
-    <header class="topbar">
-        <div class="logo">LMS</div>
-    </header>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <div class="flex h-screen">
 
-    <!-- sidebar -->
-    <nav class="sidebar">
-        <ul>
-            <li><a href="/home">Dashboard</a></li>
-            <li><a href="/courses" class="active">Courses</a></li>
-            <li><a href="/calendar">Calendar</a></li>
-            <li><a href="/forum">Forum</a></li>
-        </ul>
-    </nav>
+        <!-- Sidebar -->
+        <aside class="fixed top-0 left-0 h-screen w-60 bg-white border-r border-gray-200 flex flex-col p-5">
+            <h1 class="text-2xl font-bold mb-8">Cinau</h1>
+            <nav class="flex flex-col gap-3">
+                <a href="dashboard" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a href="assignments" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-book"></i> Assignments
+                </a>
+                <a href="schedule" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-calendar"></i> Schedule
+                </a>
+                <a href="discussions" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-comments"></i> Discussions
+                </a>
+                <a href="notes" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-note-sticky"></i> Notes
+                </a>
+                <a href="classes" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-chalkboard-user"></i> Classes
+                </a>
+                <a href="courses" class="flex items-center gap-3 px-3 py-2 rounded-md bg-orange-500 text-white font-medium">
+                    <i class="fa-solid fa-book-open"></i> Courses
+                </a>
+                <a href="settings" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-orange-500">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </a>
+            </nav>
+        </aside>
 
-    <main class="main-content">
-        <h1>Available Courses</h1>
-        <div class="courses-grid">
-            <?php foreach ($courses as $course): ?>
-                <div class="course-card">
-                    <h3><?php echo htmlspecialchars($course['title']); ?></h3>
-                    <p><?php echo htmlspecialchars($course['description']); ?></p>
-                    <a href="course.php?id=<?php echo $course['id']; ?>" class="btn">View Course</a>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col ml-60 h-screen overflow-y-auto">
+
+            <!-- Topbar -->
+            <div class="sticky top-0 z-10 flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center gap-3 w-1/2">
+                    <div class="relative w-full">
+                        <input type="text" placeholder="Search courses..."
+                               class="w-full border border-gray-300 rounded-md pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
+                    </div>
                 </div>
-            <?php endforeach; ?>
-        </div>
-    </main>
-</div>
+                <div class="flex items-center gap-5">
+                    <button class="text-xl">🔔</button>
+                    <div class="flex items-center gap-2 cursor-pointer">
+                        <img src="https://via.placeholder.com/32" class="w-8 h-8 rounded-full" alt="Avatar">
+                        <span>Christopher ▼</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Header -->
+            <div class="px-8 py-6">
+                <h2 class="text-2xl font-bold text-gray-800">Available Courses 📚</h2>
+            </div>
+
+            <!-- Courses Grid -->
+            <div class="grid grid-cols-3 gap-6 px-8 pb-8">
+                <!-- Example course card -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Secure Programming</h3>
+                        <p class="text-gray-500 text-sm mb-3">Programming Secure</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Reverse Engineering</h3>
+                        <p class="text-gray-500 text-sm mb-3">Apa ini Tuhanku</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Network Penetration Testing</h3>
+                        <p class="text-gray-500 text-sm mb-3">Spam CTF sampai mati</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Entrepreneurship</h3>
+                        <p class="text-gray-500 text-sm mb-3">Aku mau duit gratis</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Compilation Techniques</h3>
+                        <p class="text-gray-500 text-sm mb-3">Teknik</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">26 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Blockchain Fundamentals</h3>
+                        <p class="text-gray-500 text-sm mb-3">Aku nak bitcoin gratis</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">Enroll</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Computer Forensics</h3>
+                        <p class="text-gray-500 text-sm mb-3">Clear browsing history tidak berguna</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800 mb-1">Operating Systems</h3>
+                        <p class="text-gray-500 text-sm mb-3">Windows, Linux, macOS</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-orange-500 font-medium">13 Lessons</span>
+                            <button class="bg-orange-500 text-white px-3 py-1 rounded-md text-sm">Enroll</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
 
 <?php
 require_once __DIR__ . '/../layouts/footer.php';
