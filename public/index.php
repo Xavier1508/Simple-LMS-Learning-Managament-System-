@@ -27,6 +27,10 @@ switch ($request_uri) {
     case '/courses':
         require_once __DIR__ . '/../views/pages/courses.php';
         break;
+
+    case '/dashboard':
+        require_once __DIR__ . '/../views/pages/dashboard.php';
+        break;
     
     //Counter error 404 kalo gaada page yang sesuai
     default:
