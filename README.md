@@ -6,12 +6,7 @@ A key requirement for this course is a peer-security audit, where other teams wi
 
 ## Project Evolution: From Native PHP to Laravel
 
-Before diving into the setup, it's important to understand the move from Native PHP to the Laravel framework. Think of it like building a house:
-
-  * **Native PHP**: This is like buying raw materials—wood, nails, cement, and bricks. You build everything from scratch, from the foundation to the roof. You have complete freedom, but it takes longer, is prone to errors, and can become disorganized without deep expertise.
-  * **Laravel**: This is like buying a pre-fabricated home with a solid foundation, frame, and tested plumbing & electrical systems already in place. Your job is to design the interior, paint the walls, and add furniture. It's significantly faster, more secure, and the final structure is robust because it follows established architectural standards (known as *best practices* in coding).
-
-Technically, Laravel provides a powerful, pre-built structure that includes:
+Before diving into the setup, it's important to understand the move from Native PHP to the Laravel framework. Technically, Laravel provides a powerful, pre-built structure that includes:
 
   * **MVC Architecture (Model-View-Controller)**: Separates application logic, user interface, and database interactions, making the code cleaner and easier to manage.
   * **Eloquent ORM**: An intuitive way to work with your database. You can interact with tables as if they were simple PHP objects, eliminating the need for complex SQL queries.
