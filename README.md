@@ -27,6 +27,7 @@ This project is built with a focus on core web technologies:
 
 To run this project on your local machine, please follow one of the two methods below.
 
+#### Part 1: Running `Simple-LMS-App` (Native PHP)
 ### Method 1: Using the PHP Built-in Server (Recommended)
 
 This is the quickest way to get the application running without needing additional software like XAMPP, as long as you have PHP installed on your system.
@@ -66,6 +67,52 @@ This method is suitable if you prefer a full server environment with Apache and 
 
 4.  **Access the Application**
     Open your web browser and go to `http://localhost/Simple-LMS-Learning-Managament-System-/public`.
+
+#### Part 2: Running `lms-laravel` (Laravel Framework)
+
+This version requires Composer, Node.js, and NPM. The setup involves running two concurrent terminal sessions.
+
+1.  **Navigate to the Laravel Project Directory**
+    From the root of the cloned repository, move into the `lms-laravel` directory.
+    ```bash
+    cd lms-laravel
+    ```
+
+2.  **Install PHP Dependencies**
+    ```bash
+    composer install
+    ```
+
+3.  **Install Frontend Dependencies**
+    ```bash
+    npm install
+    ```
+
+4.  **Create Environment File**
+    Copy the example environment file. You may need to configure your database details inside the new `.env` file.
+    ```bash
+    cp .env.example .env
+    ```
+
+5.  **Generate Application Key**
+    ```bash
+    php artisan key:generate
+    ```
+
+6.  **Run the Servers (Two Terminals Required)**
+    You need to run two commands in two separate terminals from the `lms-laravel` directory.
+
+    -   **In your first terminal**, start the Laravel development server:
+        ```bash
+        php artisan serve
+        ```
+    -   **In your second terminal**, start the Vite frontend development server:
+        ```bash
+        npm run dev
+        ```
+
+7.  **Access the Application**
+    Open your web browser and go to the URL provided by `php artisan serve` (usually `http://127.0.0.1:8000`).
 
 ---
 
