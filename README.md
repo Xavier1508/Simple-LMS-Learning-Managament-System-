@@ -27,7 +27,7 @@ This project is built with a focus on core web technologies:
 
 To run this project on your local machine, please follow one of the two methods below.
 
-#### Part 1: Running `Simple-LMS-App` (Native PHP)
+## Part 1: Running `Simple-LMS-App` (Native PHP)
 ### Method 1: Using the PHP Built-in Server (Recommended)
 
 This is the quickest way to get the application running without needing additional software like XAMPP, as long as you have PHP installed on your system.
@@ -68,7 +68,7 @@ This method is suitable if you prefer a full server environment with Apache and 
 4.  **Access the Application**
     Open your web browser and go to `http://localhost/Simple-LMS-Learning-Managament-System-/public`.
 
-#### Part 2: Running `lms-laravel` (Laravel Framework)
+## Part 2: Running `lms-laravel` (Laravel Framework)
 
 This version requires Composer, Node.js, and NPM. The setup involves running two concurrent terminal sessions.
 
