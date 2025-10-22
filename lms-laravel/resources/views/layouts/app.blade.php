@@ -12,17 +12,69 @@
     <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @stack('styles')
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
     <div class="flex h-screen">
 
         <aside class="fixed top-0 left-0 h-screen w-60 bg-white border-r border-gray-200 flex flex-col p-5">
-            <a href="/" class="text-2xl font-bold mb-8">Ascend LMS</a> <nav class="flex flex-col gap-3">
-                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'bg-orange-500 text-white font-medium' : 'text-gray-600' }} flex items-center gap-3 px-3 py-2 rounded-md  hover:text-orange-500">
+            <a href="#" class="text-2xl font-bold mb-8">Ascend LMS</a>
+            <nav class="flex flex-col gap-3">
+                <a href="{{ route('dashboard') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('dashboard')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Dashboard
                 </a>
-                <a href="{{ route('courses') }}" class="{{ request()->routeIs('courses') ? 'bg-orange-500 text-white font-medium' : 'text-gray-600' }} flex items-center gap-3 px-3 py-2 rounded-md hover:text-orange-500">
+
+                <a href="{{ route('courses') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('courses')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
                     <i class="fa-solid fa-book-open w-5 text-center"></i> Courses
+                </a>
+
+                <a href="{{ route('forum') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('forum')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
+                    <i class="fa-solid fa-comments w-5 text-center"></i> Forum
+                </a>
+
+                <a href="{{ route('assessment') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('assessment')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
+                    <i class="fa-solid fa-file-pen w-5 text-center"></i> Assessment
+                </a>
+
+                <a href="{{ route('gradebook') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('gradebook')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
+                    <i class="fa-solid fa-graduation-cap w-5 text-center"></i> Gradebook
+                </a>
+
+                <a href="{{ route('attendance') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('attendance')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
+                    <i class="fa-solid fa-calendar-check w-5 text-center"></i> Attendance
+                </a>
+
+                <a href="{{ route('schedule') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md
+                          {{ request()->routeIs('schedule')
+                              ? 'bg-orange-500 text-white font-medium hover:text-white'
+                              : 'text-gray-600 hover:text-orange-500' }}">
+                    <i class="fa-solid fa-calendar-days w-5 text-center"></i> Schedule
                 </a>
             </nav>
         </aside>
@@ -36,15 +88,19 @@
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
                     </div>
                 </div>
-                <div class="flex items-center gap-5">
-                    <button class="text-xl text-gray-500 hover:text-orange-500">🔔</button>
-                    <div class="relative">
-                        <button class="flex items-center gap-2 cursor-pointer">
-                            <img src="https://placehold.co/100x100/D97706/FFFFFF?text=X" class="w-8 h-8 rounded-full" alt="Avatar">
-                            <span>{{ Auth::user()->name }} ▼</span>
-                        </button>
+                @if(View::exists('livewire.profile-dropdown'))
+                    <livewire:profile-dropdown />
+                @else
+                    <div class="flex items-center gap-5">
+                        <button class="text-xl text-gray-500 hover:text-orange-500">🔔</button>
+                        <div class="relative">
+                            <button class="flex items-center gap-2 cursor-pointer">
+                                <img src="https://placehold.co/100x100/D97706/FFFFFF?text=X" class="w-8 h-8 rounded-full" alt="Avatar">
+                                <span>{{ Auth::user()->name }} ▼</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
 
             {{ $slot }}
@@ -53,7 +109,16 @@
     </div>
 
     <script>
-      lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Panggil lucide untuk ikon statis di layout
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                console.error('Lucide (layout) not loaded');
+            }
+        });
     </script>
+
+    @stack('scripts')
 </body>
 </html>

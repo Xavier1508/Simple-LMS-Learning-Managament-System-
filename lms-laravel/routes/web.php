@@ -22,4 +22,24 @@ Route::get('courses', [CourseController::class, 'index'])
     ->name('courses');
 // ---------------------------------
 
+Route::view('forum', 'forum')
+    ->middleware(['auth', 'verified'])
+    ->name('forum');
+
+Route::view('assessment', 'assessment')
+    ->middleware(['auth', 'verified'])
+    ->name('assessment');
+
+Route::view('gradebook', 'gradebook')
+    ->middleware(['auth', 'verified'])
+    ->name('gradebook');
+
+Route::view('attendance', 'attendance')
+    ->middleware(['auth', 'verified'])
+    ->name('attendance');
+
+Route::view('schedule', 'schedule')
+    ->middleware(['auth', 'verified'])
+    ->name('schedule');
+
 require __DIR__.'/auth.php';
