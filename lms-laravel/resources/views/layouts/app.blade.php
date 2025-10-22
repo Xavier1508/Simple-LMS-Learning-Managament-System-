@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js" defer></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -53,7 +53,23 @@
     </div>
 
     <script>
-      lucide.createIcons();
+      window.addEventListener('DOMContentLoaded', function () {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        } else {
+          console.error('Lucide (layout) not loaded');
+        }
+      });
+
+      // Re-run after Livewire navigations (if Livewire is used)
+      document.addEventListener('livewire:navigated', function () {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        }
+      });
     </script>
+
+    {{-- Page-level scripts pushed from views --}}
+    @stack('scripts')
 </body>
 </html>

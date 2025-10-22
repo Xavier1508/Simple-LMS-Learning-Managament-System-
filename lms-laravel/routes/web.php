@@ -15,6 +15,11 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+// Schedule page
+Route::view('schedule', 'schedule')
+    ->middleware(['auth', 'verified'])
+    ->name('schedule');
+
 // --- UBAH ROUTE untuk controller ---
 // Semula: Route::view('courses', 'courses')
 Route::get('courses', [CourseController::class, 'index'])
