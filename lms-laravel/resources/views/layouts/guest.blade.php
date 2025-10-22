@@ -14,9 +14,6 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            {{-- DIsini buat manggil layout dari user pas
-            awal masuk ini ambilnya dari livewire/pages/auth
-            (punyanya login register)            --}}
             {{ $slot }}
         </div>
     </body>
