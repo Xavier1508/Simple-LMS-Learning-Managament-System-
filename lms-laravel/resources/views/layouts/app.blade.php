@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js" defer></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -23,6 +23,9 @@
                 </a>
                 <a href="{{ route('courses') }}" class="{{ request()->routeIs('courses') ? 'bg-orange-500 text-white font-medium' : 'text-gray-600' }} flex items-center gap-3 px-3 py-2 rounded-md hover:text-orange-500">
                     <i class="fa-solid fa-book-open w-5 text-center"></i> Courses
+                </a>
+                <a href="{{ route('schedule') }}" class="{{ request()->routeIs('schedule') ? 'bg-orange-500 text-white font-medium' : 'text-gray-600' }} flex items-center gap-3 px-3 py-2 rounded-md hover:text-orange-500">
+                    <i class="fa-solid fa-calendar-days w-5 text-center"></i> Schedule
                 </a>
             </nav>
         </aside>
@@ -53,7 +56,15 @@
     </div>
 
     <script>
-      lucide.createIcons();
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        } else {
+          console.error('Lucide (layout) not loaded');
+        }
+      });
     </script>
+
+    @stack('scripts')
 </body>
 </html>

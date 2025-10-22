@@ -22,4 +22,9 @@ Route::get('courses', [CourseController::class, 'index'])
     ->name('courses');
 // ---------------------------------
 
+// Schedule page
+Route::view('schedule', 'schedule')
+    ->middleware(['auth', 'verified'])
+    ->name('schedule');
+
 require __DIR__.'/auth.php';
