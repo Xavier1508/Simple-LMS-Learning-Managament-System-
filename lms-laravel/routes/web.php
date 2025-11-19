@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\AttendanceManager;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CourseController;
@@ -25,7 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Controller lain biarkan saja dulu jika belum diubah ke Livewire
     Route::get('gradebook', [GradebookController::class, 'index'])->name('gradebook');
-    Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance');
+    Route::get('attendance', \App\Livewire\AttendanceManager::class)->name('attendance');
     Route::get('forum', [ForumController::class, 'index'])->name('forum');
     Route::get('assessment', [AssessmentController::class, 'index'])->name('assessment');
     Route::get('schedule', [ScheduleController::class, 'index'])->name('schedule');

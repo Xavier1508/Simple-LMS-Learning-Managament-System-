@@ -16,6 +16,11 @@ class CourseSession extends Model
         'end_time' => 'datetime',
     ];
 
+    public function class()
+    {
+        return $this->belongsTo(CourseClass::class, 'course_class_id');
+    }
+    
     public function materials()
     {
         return $this->hasMany(CourseMaterial::class, 'course_session_id');
