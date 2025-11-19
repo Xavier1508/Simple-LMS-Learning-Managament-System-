@@ -1,8 +1,7 @@
 <?php
 
+use App\Mail\LecturerCredentials;
 use App\Models\User;
-use App\Mail\RegisterOtpMail;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
@@ -13,16 +12,35 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')] class extends Component
 {
+    // Properti input
     public string $first_name = '';
     public string $last_name = '';
     public string $email = '';
+    public string $phone_number = '';
     public string $password = '';
     public string $password_confirmation = '';
 
-    public int $register_step = 1;
+    // Properti OTP
+    public int $register_step = 1; // <--- Variabel ini sekarang pasti terinisialisasi
     public string $otp_code = '';
+    public ?User $user = null;
 
-    protected function generateOtp(): string
+    private function generatePrivateNumber(): string
+    {
+        return Str::random(16);
+    }
+
+    private function generateLecturerCode(string $firstName, string $lastName): string
+    {
+        $day = now()->format('d');
+        $month = now()->format('m');
+        $year = now()->format('y');
+        $firstInitial = strtoupper(substr($firstName, 0, 1));
+        $lastInitial = strtoupper(substr($lastName, -1, 1));
+        return "LEC{$day}{$month}{$year}{$firstInitial}{$lastInitial}";
+    }
+
+    private function generateOtp(): string
     {
         $char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $num = '0123456789';
@@ -33,94 +51,113 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function register(): void
     {
-        // STEP 1: Input Data
+        // STEP 1: Data, Generate Credentials, Kirim OTP Sekaligus
         if ($this->register_step === 1) {
             $validated = $this->validate([
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+                'phone_number' => ['required', 'string', 'max:15'],
                 'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             ]);
 
+            $code = $this->generateLecturerCode($validated['first_name'], $validated['last_name']);
+            $privateNumber = $this->generatePrivateNumber();
             $otp = $this->generateOtp();
 
-            // PERBAIKAN: Hapus 'name' dari sini, biarkan database yang generate
-            User::create([
+            $this->user = User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'],
                 'password' => Hash::make($validated['password']),
-                'role' => 'student',
+                'role' => 'lecturer',
+                'lecturer_code' => $code,
+                'private_number' => $privateNumber,
                 'otp_code' => $otp,
                 'otp_expires_at' => Carbon::now()->addSeconds(90),
             ]);
 
-            Mail::to($validated['email'])->send(new RegisterOtpMail($otp, 1.5));
+            Mail::to($this->email)->send(new LecturerCredentials([
+                'lecturer_code' => $code,
+                'otp_code' => $otp
+            ]));
 
+            session()->flash('lecturer_registered', [
+                'email' => $this->email,
+                'lecturer_code' => $code
+            ]);
+
+            session()->flash('otp-sent', 'Kode Dosen dan OTP telah dikirim ke email Anda.');
             $this->register_step = 2;
-            session()->flash('otp-sent', 'Kode OTP telah dikirim ke email Anda.');
         }
         // STEP 2: Verifikasi OTP
         elseif ($this->register_step === 2) {
 
             $this->validate(['otp_code' => 'required|string|size:9']);
 
-            $user = User::where('email', $this->email)->first();
-
-            if (!$user) {
-                $this->addError('otp_code', 'User tidak ditemukan. Silakan daftar ulang.');
-                return;
+            if (!$this->user) {
+                 $this->user = User::where('email', $this->email)->first();
             }
 
-            // PERBAIKAN: Pakai trim() untuk membuang spasi tidak sengaja
-            if (trim($user->otp_code) !== trim($this->otp_code)) {
+            if (!$this->user || $this->user->otp_code !== $this->otp_code) {
                 $this->addError('otp_code', 'Kode OTP salah.');
                 return;
             }
 
-            if (Carbon::now()->isAfter($user->otp_expires_at)) {
-                $this->addError('otp_code', 'Kode OTP kedaluwarsa. Silakan kirim ulang.');
+            if (Carbon::now()->isAfter($this->user->otp_expires_at)) {
+                $this->addError('otp_code', 'Kode OTP kedaluwarsa. Silakan daftar ulang.');
                 return;
             }
 
-            $user->forceFill(['otp_code' => null, 'otp_expires_at' => null])->save();
+            $this->user->forceFill(['otp_code' => null, 'otp_expires_at' => null])->save();
 
-            Auth::login($user);
-            $this->redirect(route('dashboard'), navigate: true);
+            $this->redirect(route('register.lecturer.success'), navigate: true);
         }
     }
 
     public function resendOtp(): void
     {
         if ($this->register_step === 2) {
-            $user = User::where('email', $this->email)->first();
-
-            if ($user) {
-                $otp = $this->generateOtp();
-                $user->forceFill([
-                    'otp_code' => $otp,
-                    'otp_expires_at' => Carbon::now()->addSeconds(90),
-                ])->save();
-
-                Mail::to($user->email)->send(new RegisterOtpMail($otp, 1.5));
-                session()->flash('otp-sent', 'Kode OTP baru telah dikirimkan.');
+            if (!$this->user) {
+                $this->user = User::where('email', $this->email)->first();
             }
+
+            if (!$this->user) {
+                $this->addError('otp_code', 'User tidak ditemukan. Silakan daftar ulang.');
+                return;
+            }
+
+            $otp = $this->generateOtp();
+
+            $this->user->forceFill([
+                'otp_code' => $otp,
+                'otp_expires_at' => Carbon::now()->addSeconds(90),
+            ])->save();
+
+            Mail::to($this->user->email)->send(new LecturerCredentials([
+                'lecturer_code' => $this->user->lecturer_code,
+                'otp_code' => $otp
+            ]));
+
+            session()->flash('otp-sent', 'Kode OTP baru telah dikirimkan ke email Anda.');
         }
     }
+
 }; ?>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col md:flex-row w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div class="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center space-y-6">
+        <div class="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center space-y-8">
             <div class="space-y-2">
-                <h2 class="text-4xl font-bold text-gray-900">Student Registration</h2>
+                <h2 class="text-4xl font-bold text-gray-900">Lecturer Registration</h2>
                 <p class="text-gray-500">
-                    Ayo bergabung dengan Ascend LMS dan mulai proses belajar Anda.
+                    Ayo bergabung dengan Ascend LMS dan mulai mengajar.
                 </p>
             </div>
 
             @if ($register_step === 2 && session()->has('otp-sent'))
-                <div class="p-3 mb-4 text-sm text-green-700 bg-green-100 rounded-lg border border-green-300">
+                <div class="p-3 mb-4 text-sm text-green-700 bg-green-100 rounded-lg border border-green-300" role="alert">
                     {{ session('otp-sent') }}
                 </div>
             @endif
@@ -150,6 +187,13 @@ new #[Layout('layouts.guest')] class extends Component
                     </div>
 
                     <div>
+                        <label for="phone_number" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="text" id="phone_number" wire:model="phone_number" placeholder="Masukkan nomor telepon" required
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+                        @error('phone_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                         <input type="password" id="password" wire:model="password" placeholder="Buat password" required autocomplete="new-password"
                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
@@ -164,13 +208,13 @@ new #[Layout('layouts.guest')] class extends Component
                     </div>
 
                     <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition duration-150 shadow-md shadow-blue-300/50">
-                        Register & Kirim OTP
+                        Register & Dapatkan Kode
                     </button>
 
                 @elseif ($register_step === 2)
                     <div class="text-center p-4 border rounded-lg bg-gray-50">
-                        <p class="text-lg font-bold text-gray-800">Verifikasi Akun</p>
-                        <p class="text-sm text-gray-600 mt-1">Kode OTP (9 karakter) telah dikirimkan ke email Anda.</p>
+                        <p class="text-lg font-bold text-gray-800">Verifikasi Kode Dosen</p>
+                        <p class="text-sm text-gray-600 mt-1">Kode OTP (9 karakter) telah dikirimkan ke email Anda bersama Kode Dosen.</p>
                     </div>
 
                     <div>
@@ -184,7 +228,7 @@ new #[Layout('layouts.guest')] class extends Component
 
                     <div class="flex flex-col space-y-3 pt-4">
                         <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition duration-150 shadow-md shadow-blue-300/50">
-                            Verifikasi & Login
+                            Verifikasi & Selesai
                         </button>
                         <button type="button" wire:click="resendOtp" class="w-full text-blue-600 py-3 rounded-lg font-bold hover:text-blue-800 transition duration-150 bg-white border border-blue-600">
                             Kirim Ulang OTP
@@ -196,15 +240,18 @@ new #[Layout('layouts.guest')] class extends Component
             <div class="text-center pt-4">
                 <span class="text-sm text-gray-500">
                     Already have an account?
-                    <a href="{{ route('login') }}" wire:navigate class="text-red-500 font-semibold hover:text-red-600">Login Mahasiswa</a>
-                    |
-                    Daftar sebagai Dosen?
-                    <a href="{{ route('register.lecturer') }}" wire:navigate class="text-blue-500 font-semibold hover:text-blue-600">Daftar Dosen</a>
+                    <a href="{{ route('login.lecturer') }}" wire:navigate class="text-red-500 font-semibold hover:text-red-600">Login Dosen</a>
                 </span>
+
+                <p class="pt-2 text-sm text-gray-500">
+                    Atau Daftar sebagai Mahasiswa?
+                    <a href="{{ route('register') }}" wire:navigate class="text-blue-500 font-semibold hover:text-blue-600">Daftar Mahasiswa</a>
+                </p>
             </div>
+
         </div>
 
-        <div class="hidden md:flex md:w-1/2 p-8 md:p-12 flex-col justify-between bg-[#FAA22F]">
+        <div class="hidden md:flex md:w-1/2 p-8 md:p-12 flex-col justify-between bg-[#307de2]">
             <div class="flex items-center space-x-2">
                 <span class="text-xl font-extrabold tracking-tight text-white">Ascend <span class="font-bold text-yellow-300">LMS</span></span>
             </div>
@@ -213,10 +260,10 @@ new #[Layout('layouts.guest')] class extends Component
             </div>
             <div class="space-y-4">
                 <h1 class="text-3xl md:text-4xl font-extrabold text-white font-black leading-tight">
-                    Mulai Perjalanan Akademik Anda.
+                    Inspire the Next Generation.
                 </h1>
                 <p class="text-white text-md">
-                    Daftar sekarang dan akses semua materi serta jadwal kuliah Anda.
+                    Daftar sekarang dan mulai berbagi ilmu dengan sistem yang terintegrasi.
                 </p>
             </div>
         </div>

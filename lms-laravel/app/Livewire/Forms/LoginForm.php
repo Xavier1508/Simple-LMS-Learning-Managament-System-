@@ -24,13 +24,26 @@ class LoginForm extends Form
     /**
      * Attempt to authenticate the request's credentials.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @param string $expectedRole Peran (role) yang diharapkan saat login (student/lecturer).
      */
-    public function authenticate(): void
+    public function authenticate(string $expectedRole): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
+        // 1. Siapkan Kredensial dasar
+        $credentials = [
+            'email' => $this->email,
+            'password' => $this->password,
+        ];
+
+        // 2. Tambahkan syarat Role agar Siswa tidak bisa login di form Dosen (dan sebaliknya)
+        if ($expectedRole) {
+            $credentials['role'] = $expectedRole;
+        }
+
+        // 3. Coba Login Standar Laravel
+        // Auth::attempt akan otomatis mengecek hash password dan role di database
+        if (! Auth::attempt($credentials, $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -38,6 +51,7 @@ class LoginForm extends Form
             ]);
         }
 
+        // 4. Jika berhasil login, bersihkan limit percobaan
         RateLimiter::clear($this->throttleKey());
     }
 

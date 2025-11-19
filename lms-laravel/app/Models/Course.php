@@ -14,10 +14,10 @@ class Course extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'title',
-        'code',
-        'class_code',
-        'description',
-    ];
+    protected $fillable = ['title', 'code', 'description'];
+
+    public function classes()
+    {
+        return $this->hasMany(CourseClass::class);
+    }
 }

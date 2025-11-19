@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('course_classes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('lecturer_id')->constrained()->cascadeOnDelete();
-            $table->string('class_code'); // e.g., LA07, LC21
-            $table->string('semester'); // e.g., "2024/2025 Ganjil"
+            $table->foreignId('lecturer_id')->constrained('users')->cascadeOnDelete();
+            $table->string('class_code'); // e.g., LA07
+            $table->string('semester'); // e.g., "2025, Odd Semester"
+            $table->string('type'); // e.g., "LEC", "LAB" (KOLOM BARU)
             $table->timestamps();
         });
     }
