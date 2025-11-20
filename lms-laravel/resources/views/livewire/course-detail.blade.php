@@ -66,6 +66,12 @@
         {{-- FORUM TAB (BARU) --}}
         @elseif($activeTab === 'forum')
              @include('livewire.course-detail.tabs.forum')
+
+        @elseif($activeTab === 'assessment')
+            @include('livewire.course-detail.tabs.assessment')
+
+        @elseif($activeTab === 'gradebook')
+             @include('livewire.course-detail.tabs.gradebook')
              
         {{-- OTHER TABS: Placeholder --}}
         @else

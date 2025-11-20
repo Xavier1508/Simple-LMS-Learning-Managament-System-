@@ -25,7 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('courses/{id}', \App\Livewire\CourseDetail::class)->name('courses.detail');
 
     // Controller lain biarkan saja dulu jika belum diubah ke Livewire
-    Route::get('gradebook', [GradebookController::class, 'index'])->name('gradebook');
+    Route::get('gradebook', \App\Livewire\GradebookManager::class)->name('gradebook');
     Route::get('attendance', \App\Livewire\AttendanceManager::class)->name('attendance');
     Route::get('forum', [ForumController::class, 'index'])->name('forum');
     Route::get('assessment', [AssessmentController::class, 'index'])->name('assessment');

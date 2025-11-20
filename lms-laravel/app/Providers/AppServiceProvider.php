@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL; // <--- 1. TAMBAHKAN INI
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if($this->app->environment('production')) {
+            // Paksa semua link/asset jadi HTTPS (Kunci Gembok)
+            URL::forceScheme('https');
+        }
     }
 }
