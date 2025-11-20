@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Livewire\Traits\Course\WithForum;
 
 // Import Traits yang baru dibuat
 use App\Livewire\Traits\Course\WithAttendance;
@@ -23,6 +24,7 @@ class CourseDetail extends Component
     // Gunakan Traits disini
     use WithAttendance;
     use WithMaterials;
+    use WithForum;
 
     public $courseClassId;
     public $activeTab = 'session';

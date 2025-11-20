@@ -9,7 +9,8 @@
     </div>
 @endif
 
-<div class="flex space-x-2 pb-4 mb-5 mt-4">
+{{-- SESSION LIST (NAVIGASI) --}}
+<div class="flex space-x-2 pb-4 mb-5 mt-4 overflow-x-auto">
     @foreach($class->sessions as $session)
         <button wire:click="toggleSession({{ $session->id }})"
             class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition duration-150
@@ -19,9 +20,12 @@
     @endforeach
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-10 gap-8">
-    {{-- LEFT COLUMN: Session Detail --}}
-    <div class="lg:col-span-7 space-y-6">
+{{-- GRID CONTENT --}}
+{{-- PERBAIKAN: Gunakan lg:grid-cols-3 (2/3 kiri, 1/3 kanan) agar lebih aman daripada cols-10 --}}
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+    {{-- LEFT COLUMN: Session Detail (Span 2 dari 3) --}}
+    <div class="lg:col-span-3 space-y-6 min-w-0">
         @foreach($class->sessions as $session)
             @if($activeSessionId === $session->id)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in-down">
@@ -38,7 +42,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 text-sm mt-4 bg-gray-50 p-4 rounded-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4 bg-gray-50 p-4 rounded-lg">
                             <div>
                                 <p class="text-gray-500 text-xs">Start Time</p>
                                 <p class="font-medium text-gray-800">{{ $session->start_time->format('d M Y, H:i') }}</p>
@@ -54,8 +58,8 @@
         @endforeach
     </div>
 
-    {{-- RIGHT COLUMN: Action Sidebar --}}
-    <div class="lg:col-span-3 overflow-visible">
+    {{-- RIGHT COLUMN: Action Sidebar (Span 1 dari 3) --}}
+    <div class="lg:col-span-1 overflow-visible min-w-0">
         @foreach($class->sessions as $session)
             @if($activeSessionId === $session->id)
                 @php
@@ -63,7 +67,8 @@
                     $statusData = $this->getStatusDisplay($session, $myRecord);
                 @endphp
 
-                <div class="bg-orange-500 rounded-2xl shadow-xl text-white p-6 sticky top-24">
+                {{-- PERBAIKAN: Hapus sticky jika mengganggu layout, atau pastikan parent relatif --}}
+                <div class="bg-orange-500 rounded-2xl shadow-xl text-white p-6">
                     <h3 class="font-bold text-xl mb-6 tracking-tight">Things to do in this session</h3>
 
                     {{-- ATTENDANCE CARD --}}
@@ -74,15 +79,13 @@
                             </div>
                             <div>
                                 <p class="font-bold text-base leading-tight">Attendance</p>
-
-                                {{-- Logic Status Text di Card --}}
                                 <p class="text-xs text-white/80 mt-1">
                                     @if($statusData['type'] === 'present')
                                         <span class="text-green-200 font-bold bg-green-900/20 px-1 rounded">✓ Recorded</span>
                                     @elseif($statusData['type'] === 'cancelled_lecturer')
-                                        <span class="text-red-200 font-bold bg-red-900/20 px-1 rounded">✕ Cancelled by Lecturer</span>
+                                        <span class="text-red-200 font-bold bg-red-900/20 px-1 rounded">✕ Cancelled</span>
                                     @elseif($statusData['type'] === 'cancelled_system')
-                                        <span class="text-red-200 font-bold bg-red-900/20 px-1 rounded">✕ Error / Cancelled</span>
+                                        <span class="text-red-200 font-bold bg-red-900/20 px-1 rounded">✕ Error</span>
                                     @else
                                         Must be done in 15 mins
                                     @endif
@@ -92,23 +95,14 @@
 
                         <div>
                             @if(Auth::user()->role === 'student')
-                                {{-- LOGIKA TOMBOL CHECK-IN --}}
-
-                                {{-- 1. Jika Hadir: Tombol Hilang (Sudah OK) --}}
                                 @if($statusData['type'] === 'present')
-                                    {{-- 2. Jika Dibatalkan Dosen: Disable Tombol --}}
                                 @elseif($statusData['type'] === 'cancelled_lecturer')
-                                     <button disabled class="bg-white/10 text-white/50 border border-white/20 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">
-                                        Locked
-                                    </button>
-
-                                {{-- 3. Jika Belum Absen ATAU Cancelled System (Masih boleh coba lagi jika waktu open) --}}
+                                     <button disabled class="bg-white/10 text-white/50 border border-white/20 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">Locked</button>
                                 @else
                                     <button wire:click="attend({{ $session->id }})" class="bg-white/20 hover:bg-white hover:text-orange-600 text-white border border-white/40 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
                                         {{ $statusData['type'] === 'cancelled_system' ? 'Retry' : 'Check In' }}
                                     </button>
                                 @endif
-
                             @else
                                 <button wire:click="switchTab('attendance')" class="text-xs font-medium hover:underline opacity-90 hover:opacity-100">View Report</button>
                             @endif
@@ -132,13 +126,9 @@
                         </div>
 
                         @if($session->zoom_link)
-                            <a href="{{ $session->zoom_link }}" target="_blank" class="bg-white/20 hover:bg-white hover:text-orange-600 text-white border border-white/40 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
-                                Join
-                            </a>
+                            <a href="{{ $session->zoom_link }}" target="_blank" class="bg-white/20 hover:bg-white hover:text-orange-600 text-white border border-white/40 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">Join</a>
                         @else
-                            <button disabled class="bg-white/5 text-white/30 border border-white/10 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">
-                                No Link
-                            </button>
+                            <button disabled class="bg-white/5 text-white/30 border border-white/10 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">No Link</button>
                         @endif
                     </div>
 
@@ -169,17 +159,13 @@
                                 @foreach($session->materials as $material)
                                     <div class="flex justify-between items-center group">
                                         <button wire:click="previewMaterial({{ $material->id }})" class="text-sm text-white/90 hover:text-white hover:underline truncate text-left flex-1 flex items-center mr-2">
-                                            <span class="mr-3 opacity-80 flex-shrink-0">
-                                                {!! $this->getFileIcon($material->file_type) !!}
-                                            </span>
+                                            <span class="mr-3 opacity-80 flex-shrink-0">{!! $this->getFileIcon($material->file_type) !!}</span>
                                             <span class="truncate">{{ $material->file_name }}</span>
                                         </button>
-
                                         <div class="flex items-center space-x-1 flex-shrink-0">
                                             <button wire:click="downloadMaterial({{ $material->id }})" class="p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded transition" title="Download">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                             </button>
-
                                             @if(Auth::user()->role === 'lecturer')
                                                 <button wire:click="deleteMaterial({{ $material->id }})" class="p-1.5 text-red-200 hover:text-white hover:bg-red-500/50 rounded transition" title="Delete">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>

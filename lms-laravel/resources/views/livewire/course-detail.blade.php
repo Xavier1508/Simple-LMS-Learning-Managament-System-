@@ -63,6 +63,10 @@
         @elseif($activeTab === 'attendance')
             @include('livewire.course-detail.tabs.attendance')
 
+        {{-- FORUM TAB (BARU) --}}
+        @elseif($activeTab === 'forum')
+             @include('livewire.course-detail.tabs.forum')
+             
         {{-- OTHER TABS: Placeholder --}}
         @else
             @include('livewire.course-detail.tabs.empty')
