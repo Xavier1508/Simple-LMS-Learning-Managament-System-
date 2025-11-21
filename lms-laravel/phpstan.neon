@@ -1,0 +1,16 @@
+includes:
+    - vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - routes/
+        
+    level: 6
+
+    ignoreErrors:
+        # Abaikan error umum yang aman
+        #- '#Unsafe usage of new static#'
+
+    excludePaths:
+        #- ./*/*/FileToBeExcluded.php

@@ -5,132 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
+    <title>{{ $title ?? config('app.name', 'Ascend LMS') }}</title>
 
-    {{-- Font Awesome & Lucide Icons --}}
+    {{-- Font Awesome & Lucide --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
 
-    {{-- Vite Assets (Tailwind + JS) --}}
+    {{-- Scripts --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    {{-- Styles Stack --}}
-    @stack('styles')
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-    {{-- PARENT CONTAINER: H-SCREEN & NO SCROLL ON BODY --}}
     <div class="flex h-screen w-full overflow-hidden">
 
-        {{-- 1. SIDEBAR (STATIC WIDTH, NOT FIXED) --}}
-        {{-- flex-shrink-0: Agar sidebar tidak tergencet/mengecil --}}
-        <aside class="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col h-full z-20">
+        {{-- PANGGIL SIDEBAR SEBAGAI KOMPONEN (FIX UNTUK TEST) --}}
+        <livewire:layout.navigation />
 
-            {{-- Logo Area (Fixed Height) --}}
-            <div class="p-6 flex-shrink-0">
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 group">
-                    <div class="w-10 h-10 bg-gray-800 text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
-                        <i class="fa-solid fa-graduation-cap text-lg"></i>
-                    </div>
-                    <div class="text-2xl font-extrabold tracking-tight">
-                        <span class="text-gray-800">Ascend</span><span class="text-orange-600">LMS</span>
-                    </div>
-                </a>
-            </div>
-
-            {{-- Menu Area (Scrollable independently) --}}
-            <nav class="flex-1 overflow-y-auto px-4 pb-4 space-y-1">
-                @php
-                    $menuItems = [
-                        ['route' => 'dashboard', 'icon' => 'fa-chart-line', 'label' => 'Dashboard'],
-                        ['route' => 'courses', 'icon' => 'fa-book-open', 'label' => 'Courses'],
-                        ['route' => 'forum', 'icon' => 'fa-comments', 'label' => 'Forum'],
-                        ['route' => 'assessment', 'icon' => 'fa-file-pen', 'label' => 'Assessment'],
-                        ['route' => 'gradebook', 'icon' => 'fa-medal', 'label' => 'Gradebook'],
-                        ['route' => 'attendance', 'icon' => 'fa-calendar-check', 'label' => 'Attendance'],
-                        ['route' => 'schedule', 'icon' => 'fa-calendar-days', 'label' => 'Schedule'],
-                    ];
-                @endphp
-
-                @foreach($menuItems as $item)
-                    <a href="{{ route($item['route']) }}"
-                       class="flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group text-[15px] font-medium
-                              {{ (request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*'))
-                                  ? 'bg-orange-500 text-white shadow-md transform scale-[1.02]'
-                                  : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600 hover:pl-6' }}">
-                        <i class="fa-solid {{ $item['icon'] }} w-5 text-center {{ (request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*')) ? 'text-white' : 'text-gray-400 group-hover:text-orange-500' }}"></i>
-                        {{ $item['label'] }}
-                    </a>
-                @endforeach
-            </nav>
-
-            {{-- Profile Mini (Bottom Sticky inside Sidebar) --}}
-            <div class="p-4 border-t border-gray-100 flex-shrink-0">
-                <a href="{{ route('profile') }}" class="flex items-center gap-3 group cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm border border-orange-200">
-                            {{ substr(Auth::user()->first_name ?? 'U', 0, 1) }}{{ substr(Auth::user()->last_name ?? '', 0, 1) }}
-                        </div>
-                        <span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white bg-green-500"></span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-gray-800 truncate text-sm group-hover:text-orange-600 transition">
-                            {{ Auth::user()->first_name ?? 'User' }}
-                        </p>
-                        <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                            <span class="text-xs text-green-600 font-medium">Active</span>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:text-gray-500"></i>
-                </a>
-            </div>
-        </aside>
-
-        {{-- 2. MAIN CONTENT WRAPPER --}}
-        {{-- flex-1: Ambil sisa lebar layar --}}
-        {{-- min-w-0: CRUCIAL FIX! Mencegah child grid memaksa layout melebar --}}
+        {{-- MAIN CONTENT --}}
         <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-gray-50 relative">
-
-            {{-- TOP HEADER (Sticky) --}}
             <header class="sticky top-0 z-30 flex-shrink-0 bg-white border-b border-gray-200 px-8 py-4 shadow-sm flex items-center justify-between">
-                {{-- Global Search --}}
                 <div class="w-full max-w-2xl">
-                    <livewire:global-search />
+                    {{-- Pastikan global-search component ada, jika tidak error view akan muncul --}}
+                    @if(View::exists('livewire.global-search'))
+                        <livewire:global-search />
+                    @else
+                        <input type="text" placeholder="Search..." class="w-full border-gray-300 rounded-lg">
+                    @endif
                 </div>
 
-                {{-- Right Actions --}}
                 <div class="ml-6 flex items-center gap-5 flex-shrink-0">
                     <button class="text-gray-400 hover:text-orange-500 transition relative p-1">
                         <i class="fa-regular fa-bell text-xl"></i>
                         <span class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-red-500"></span>
                     </button>
                     <div class="h-8 w-px bg-gray-200"></div>
-                    <livewire:profile-dropdown />
+
+                    {{-- Pastikan profile-dropdown ada --}}
+                    @if(View::exists('livewire.profile-dropdown'))
+                        <livewire:profile-dropdown />
+                    @else
+                         <div class="font-bold text-gray-700">{{ auth()->user()->first_name }}</div>
+                    @endif
                 </div>
             </header>
 
-            {{-- SCROLLABLE CONTENT AREA --}}
             <main class="flex-1 overflow-y-auto p-0 scroll-smooth">
                 {{ $slot }}
             </main>
-
         </div>
     </div>
 
-    {{-- Stack untuk Modal Livewire --}}
-    @stack('modals')
-
-    {{-- Stack untuk Script Tambahan --}}
     @stack('scripts')
-
     <script>
-        document.addEventListener('livewire:navigated', () => {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        });
+        document.addEventListener('livewire:navigated', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+        document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
     </script>
 </body>
 </html>

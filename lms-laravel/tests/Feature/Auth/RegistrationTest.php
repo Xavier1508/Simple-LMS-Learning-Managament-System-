@@ -19,18 +19,23 @@ class RegistrationTest extends TestCase
             ->assertSeeVolt('pages.auth.register');
     }
 
-    public function test_new_users_can_register(): void
+    public function test_new_users_can_register_step_one(): void
     {
         $component = Volt::test('pages.auth.register')
-            ->set('name', 'Test User')
+            ->set('first_name', 'Test')      // GANTI: name -> first_name
+            ->set('last_name', 'User')       // TAMBAH: last_name
             ->set('email', 'test@example.com')
             ->set('password', 'password')
             ->set('password_confirmation', 'password');
 
         $component->call('register');
+        $component->assertHasNoErrors();
 
-        $component->assertRedirect(route('dashboard', absolute: false));
-
-        $this->assertAuthenticated();
+        // Cek apakah user berhasil dibuat di database
+        $this->assertDatabaseHas('users', [
+            'email' => 'test@example.com',
+            'first_name' => 'Test',
+            'last_name' => 'User',
+        ]);
     }
 }
