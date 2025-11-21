@@ -3,8 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $course_class_id
+ * @property CourseClass $class
+ * @property \Illuminate\Database\Eloquent\Collection|Submission[] $submissions
+ */
 class Assignment extends Model
 {
     protected $fillable = [
@@ -17,24 +25,29 @@ class Assignment extends Model
         'is_lock' => 'boolean',
     ];
 
-    public function class()
+    // Relasi ke CourseClass
+    public function class(): BelongsTo
     {
         return $this->belongsTo(CourseClass::class, 'course_class_id');
     }
 
-    public function submissions()
+    // Relasi ke Submission
+    public function submissions(): HasMany
     {
         return $this->hasMany(Submission::class);
     }
 
     // Helper: Cek apakah sudah lewat deadline
-    public function isOverdue()
+    public function isOverdue(): bool
     {
+        if (!$this->due_date) {
+            return false;
+        }
         return Carbon::now()->gt($this->due_date);
     }
 
     // Helper: Cek apakah siswa tertentu sudah mengumpulkan
-    public function isSubmittedBy($userId)
+    public function isSubmittedBy(int|string $userId): bool
     {
         return $this->submissions()->where('user_id', $userId)->exists();
     }

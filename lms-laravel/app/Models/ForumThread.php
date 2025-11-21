@@ -3,8 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $course_session_id
+ * @property int $user_id
+ * @property CourseSession $session
+ * @property User $user
+ * @property \Illuminate\Database\Eloquent\Collection|ForumPost[] $posts
+ */
 class ForumThread extends Model
 {
     protected $fillable = [
@@ -19,25 +29,30 @@ class ForumThread extends Model
         'deadline_at' => 'datetime',
     ];
 
-    public function user()
+    // Relasi ke User (Pembuat Thread)
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function session()
+    // Relasi ke CourseSession
+    public function session(): BelongsTo
     {
         return $this->belongsTo(CourseSession::class, 'course_session_id');
     }
 
-    public function posts()
+    // Relasi ke Postingan/Balasan
+    public function posts(): HasMany
     {
         return $this->hasMany(ForumPost::class);
     }
 
     // Helper: Apakah sudah deadline?
-    public function isLocked()
+    public function isLocked(): bool
     {
-        if (!$this->is_assessment || !$this->deadline_at) return false;
+        if (!$this->is_assessment || !$this->deadline_at) {
+            return false;
+        }
         return Carbon::now()->gt($this->deadline_at);
     }
 }
