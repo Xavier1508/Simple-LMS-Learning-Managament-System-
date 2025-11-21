@@ -1,83 +1,59 @@
-name: PHP Composer CI
+name: PHP CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
-
-permissions:
-  contents: read
+    branches: ["main"]
+    
+defaults:
+  run:
+    working-directory: lms-laravel
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout source code
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # 2. Setup PHP (versi bisa ganti)
-    - name: Setup PHP 8.3
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.3'
-        tools: composer
-        coverage: none
-        extensions: mbstring, intl, pdo_mysql
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, json, xml
+          coverage: none
 
-    # 3. Validate composer.json
-    - name: Validate Composer Files
-      run: composer validate --strict
+      - name: Validate composer.json
+        run: composer validate --strict
 
-    # 4. Cache vendor + composer cache dir
-    - name: Get Composer Cache Directory
-      id: composer-cache-dir
-      run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: lms-laravel/vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('lms-laravel/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
 
-    - name: Cache Composer Dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          vendor
-          ${{ steps.composer-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-composer-
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-    # 5. Install Composer Dependencies
-    - name: Install Dependencies
-      run: composer install --prefer-dist --no-progress --no-interaction
+      - name: Run PHPStan (Static Analysis)
+        run: vendor/bin/phpstan analyse --memory-limit=1G
 
-    # 6. Laravel Environment (opsional untuk project Laravel)
-    - name: Prepare Laravel
-      if: exists('artisan')
-      run: |
-        cp .env.example .env || true
-        php artisan key:generate
-        php artisan config:cache
-        php artisan route:cache
-        php artisan view:cache
+      - name: Run Code Style Checker (PHP-CS-Fixer)
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
 
-    # 7. Run Static Analysis (opsional)
-    - name: PHPStan Analyse
-      if: exists('phpstan.neon') || exists('phpstan.neon.dist')
-      run: vendor/bin/phpstan analyse
+      - name: Security audit (Composer Audit)
+        run: composer audit --no-interaction
 
-    # 8. Run Tests (PHPUnit)
-    - name: Run Test Suite
-      if: exists('vendor/bin/phpunit')
-      run: vendor/bin/phpunit --testdox
+      - name: Run Laravel Pint (Alternative formatter)
+        run: vendor/bin/pint --test
 
-    # 9. Upload Test Reports (opsional)
-    - name: Upload Logs and Reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ci-artifacts
-        path: |
-          storage/logs
-          tests/_output
-          junit.xml
-        retention-days: 7
+      - name: Run migrations lint
+        run: php artisan migrate --pretend --no-interaction
+
+      - name: Run test suite
+        run: php artisan test --parallel
