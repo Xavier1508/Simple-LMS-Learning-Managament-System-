@@ -9,7 +9,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use Illuminate\Support\Str; // Import Str
+use Illuminate\Support\Str;
+use App\Models\CourseSession;
 
 #[Layout('layouts.app')]
 class CourseManager extends Component
@@ -71,12 +72,12 @@ class CourseManager extends Component
     {
         $this->validate();
 
-        // 1. Generate Kode Otomatis
+        // 1. Generate Kode Otomatis (COMP + Angka)
         $generatedCode = $this->generateAutoCode($this->selectedMajorPrefix);
 
         // 2. Cari atau Buat Mata Kuliah Utama (Parent Course)
         $course = Course::firstOrCreate(
-            ['code' => $generatedCode], // Gunakan kode hasil generate
+            ['code' => $generatedCode],
             [
                 'title' => $this->title,
                 'description' => $this->description
@@ -92,6 +93,29 @@ class CourseManager extends Component
             'type' => $this->type,
         ]);
 
+        // --- LOGIKA BARU: GENERATE 13 SESI OTOMATIS ---
+        $startDate = \Carbon\Carbon::now()->next('Monday')->setTime(13, 0); // Mulai Senin depan jam 13:00
+
+        for ($i = 1; $i <= 13; $i++) {
+            // Tentukan Mode (Ganjil = Onsite, Genap = Online) - Contoh saja
+            $isOnsite = $i % 2 != 0;
+
+            CourseSession::create([
+                'course_class_id' => $newClass->id,
+                'session_number' => $i,
+                'title' => "Session $i: Topic about " . \Illuminate\Support\Str::limit($course->title, 20), // Judul Dinamis
+                'learning_outcome' => "Students will understand the fundamental concepts of topic $i in {$course->title} and apply them in real-world scenarios.",
+                'start_time' => $startDate->copy(),
+                'end_time' => $startDate->copy()->addMinutes(100), // Durasi 100 menit
+                'delivery_mode' => $isOnsite ? 'Onsite - Class' : 'Online - GSLC',
+                'zoom_link' => $isOnsite ? null : 'https://zoom.us/j/dummy-meeting-link',
+            ]);
+
+            // Tambah 1 minggu untuk sesi berikutnya
+            $startDate->addWeek();
+        }
+        // ------------------------------------------------
+
         // 4. Invite Siswa (Jika email diisi)
         if ($this->student_email_invite) {
             $student = User::where('email', $this->student_email_invite)->first();
@@ -106,7 +130,7 @@ class CourseManager extends Component
         // Reset form
         $this->reset(['title', 'selectedMajorPrefix', 'class_code', 'description', 'student_email_invite', 'showAddModal']);
 
-        session()->flash('message', 'Class created successfully! Code: ' . $generatedCode);
+        session()->flash('message', 'Class created successfully with 13 Sessions!');
     }
 
     public function confirmDelete($id)
