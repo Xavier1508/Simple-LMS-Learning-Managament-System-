@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
  * @property int $id
  * @property string $first_name
  * @property string $last_name
- * @property string $name  // Virtual Accessor
+ * @property string $name // Virtual Accessor
  * @property string $email
  * @property string|null $phone_number
  * @property \Illuminate\Support\Carbon|null $email_verified_at
@@ -61,12 +61,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Accessor untuk menggabungkan first_name dan last_name menjadi name.
+     *
      * @return Attribute<string, never>
      */
     protected function name(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->first_name . ' ' . $this->last_name,
+            get: fn () => $this->first_name.' '.$this->last_name,
         );
     }
 

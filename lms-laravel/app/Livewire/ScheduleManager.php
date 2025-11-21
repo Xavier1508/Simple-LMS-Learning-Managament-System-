@@ -5,17 +5,18 @@ namespace App\Livewire;
 use App\Models\CourseClass;
 use App\Models\CourseSession;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 #[Layout('layouts.app')]
 class ScheduleManager extends Component
 {
     // State untuk Filter Harian
     public string $viewDate = ''; // Tanggal yang sedang dilihat (Y-m-d)
+
     public string $viewLabel = 'Today'; // 'Yesterday', 'Today', 'Tomorrow'
 
     public function mount(): void
@@ -69,7 +70,7 @@ class ScheduleManager extends Component
             /** @var CourseClass $class */ // <-- INI KUNCI PERBAIKAN PHPSTAN
 
             // Generate Warna Unik Konsisten (Hash dari Kode Kelas + Course)
-            $identifier = $class->course->code . $class->class_code;
+            $identifier = $class->course->code.$class->class_code;
             $baseColor = $this->stringToColorCode($identifier);
 
             foreach ($class->sessions as $session) {
@@ -83,7 +84,7 @@ class ScheduleManager extends Component
                 // A. Data untuk Kalender (FullCalendar)
                 $calendarEvents[] = [
                     'id' => $session->id,
-                    'title' => $class->course->code . ': ' . $session->title,
+                    'title' => $class->course->code.': '.$session->title,
                     'start' => $start->toIso8601String(),
                     'end' => $end->toIso8601String(),
                     'backgroundColor' => $isPast ? '#9CA3AF' : $baseColor, // Gray jika lewat
@@ -94,11 +95,11 @@ class ScheduleManager extends Component
                         'course_name' => $class->course->title,
                         'course_code' => $class->course->code,
                         'class_code' => $class->class_code,
-                        'session_no' => 'Session ' . $session->session_number,
+                        'session_no' => 'Session '.$session->session_number,
                         'delivery' => $session->delivery_mode,
-                        'time_range' => $start->format('H:i') . ' - ' . $end->format('H:i'),
-                        'status' => $isPast ? 'Finished' : 'Upcoming'
-                    ]
+                        'time_range' => $start->format('H:i').' - '.$end->format('H:i'),
+                        'status' => $isPast ? 'Finished' : 'Upcoming',
+                    ],
                 ];
 
                 // B. Data untuk Daily Activities (Card Bawah)
@@ -116,7 +117,7 @@ class ScheduleManager extends Component
                         'delivery_mode' => $session->delivery_mode,
                         'color' => $baseColor,
                         'is_past' => $isPast,
-                        'lecturer_name' => $class->lecturer->first_name . ' ' . $class->lecturer->last_name
+                        'lecturer_name' => $class->lecturer->first_name.' '.$class->lecturer->last_name,
                     ];
                 }
             }
@@ -128,7 +129,7 @@ class ScheduleManager extends Component
         return view('livewire.schedule-manager', [
             'events' => $calendarEvents,
             'dailyActivities' => $dailyActivities,
-            'role' => $user->role
+            'role' => $user->role,
         ]);
     }
 
@@ -137,6 +138,7 @@ class ScheduleManager extends Component
     {
         $code = dechex(crc32($str));
         $code = substr($code, 0, 6);
-        return "#" . $code;
+
+        return '#'.$code;
     }
 }

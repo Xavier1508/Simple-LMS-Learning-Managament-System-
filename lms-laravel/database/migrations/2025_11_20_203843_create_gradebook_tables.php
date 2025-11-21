@@ -37,7 +37,7 @@ return new class extends Migration
 
         // 3. Tambahkan SKS ke Course (Penting untuk GPA)
         Schema::table('courses', function (Blueprint $table) {
-            if (!Schema::hasColumn('courses', 'credits')) {
+            if (! Schema::hasColumn('courses', 'credits')) {
                 $table->integer('credits')->default(3); // Default 3 SKS
             }
         });

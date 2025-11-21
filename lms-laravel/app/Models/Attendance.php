@@ -22,7 +22,7 @@ class Attendance extends Model
         'user_id',
         'status',
         'attended_at',
-        'recorded_by'
+        'recorded_by',
     ];
 
     protected $casts = [

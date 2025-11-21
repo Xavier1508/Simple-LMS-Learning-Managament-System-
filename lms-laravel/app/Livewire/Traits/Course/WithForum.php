@@ -3,10 +3,9 @@
 namespace App\Livewire\Traits\Course;
 
 use App\Models\CourseClass;
-use App\Models\ForumThread;
-use App\Models\ForumPost;
 use App\Models\CourseSession;
-use Carbon\Carbon;
+use App\Models\ForumPost;
+use App\Models\ForumThread;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,26 +14,35 @@ trait WithForum
     // --- STATE MANAGEMENT ---
     // 'list' = Daftar Thread, 'create' = Form Baru, 'detail' = Baca Thread
     public $forumState = 'list';
+
     public $selectedThreadId = null;
 
     // --- CREATE THREAD FORM ---
     public $newThreadTitle = '';
+
     public $newThreadContent = '';
+
     public $newThreadAttachment; // File temporary Livewire
 
     // Lecture Options
     public $isThreadHidden = false;
+
     public $isThreadAssessment = false;
+
     public $threadDeadline = null;
+
     public $targetSessionId = null; // Dropdown session
 
     // Cross Posting (Lecture)
     public $crossPostClassIds = []; // Array ID kelas lain
+
     public $availableCrossClasses = []; // Data kelas lain dg course sama
 
     // --- REPLY FORM ---
     public $replyContent = '';
+
     public $replyAttachment;
+
     public $replySort = 'oldest'; // 'oldest' or 'newest'
 
     // --- NAVIGASI ---
@@ -103,7 +111,7 @@ trait WithForum
         );
 
         // 5. Handle Cross Posting (Lecture Only)
-        if (Auth::user()->role === 'lecturer' && !empty($this->crossPostClassIds)) {
+        if (Auth::user()->role === 'lecturer' && ! empty($this->crossPostClassIds)) {
             // Ambil session number dari session target saat ini
             $currentSession = CourseSession::find($this->targetSessionId);
             $sessionNum = $currentSession->session_number;
@@ -157,6 +165,7 @@ trait WithForum
         // Cek Deadline Assessment untuk Siswa
         if (Auth::user()->role === 'student' && $thread->isLocked()) {
             session()->flash('error', 'This assessment is locked. Deadline passed.');
+
             return;
         }
 
@@ -181,7 +190,9 @@ trait WithForum
     // Simpan file dengan nama acak (Aman) tapi simpan nama asli di DB
     private function handleFileUpload($file)
     {
-        if (!$file) return ['path' => null, 'name' => null, 'type' => null];
+        if (! $file) {
+            return ['path' => null, 'name' => null, 'type' => null];
+        }
 
         $originalName = $file->getClientOriginalName();
         $type = $file->extension();
@@ -191,7 +202,7 @@ trait WithForum
         return [
             'path' => $path,
             'name' => $originalName,
-            'type' => $type
+            'type' => $type,
         ];
     }
 
@@ -207,7 +218,7 @@ trait WithForum
         $this->reset([
             'newThreadTitle', 'newThreadContent', 'newThreadAttachment',
             'isThreadHidden', 'isThreadAssessment', 'threadDeadline',
-            'crossPostClassIds', 'selectedThreadId'
+            'crossPostClassIds', 'selectedThreadId',
         ]);
     }
 
@@ -217,7 +228,9 @@ trait WithForum
         // Cek Hak: Pemilik atau Dosen
         if ($thread && (Auth::id() == $thread->user_id || Auth::user()->role === 'lecturer')) {
             // Hapus file jika ada
-            if ($thread->attachment_path) Storage::disk('public')->delete($thread->attachment_path);
+            if ($thread->attachment_path) {
+                Storage::disk('public')->delete($thread->attachment_path);
+            }
             $thread->delete();
             session()->flash('message', 'Thread deleted.');
             $this->switchToForumList();
@@ -228,7 +241,9 @@ trait WithForum
     {
         $post = ForumPost::find($id);
         if ($post && (Auth::id() == $post->user_id || Auth::user()->role === 'lecturer')) {
-             if ($post->attachment_path) Storage::disk('public')->delete($post->attachment_path);
+            if ($post->attachment_path) {
+                Storage::disk('public')->delete($post->attachment_path);
+            }
             $post->delete();
             session()->flash('message', 'Comment deleted.');
         }

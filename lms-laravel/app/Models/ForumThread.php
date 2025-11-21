@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * @property int $id
@@ -28,7 +28,7 @@ class ForumThread extends Model
     protected $fillable = [
         'course_session_id', 'user_id', 'title', 'content',
         'is_hidden', 'is_assessment', 'deadline_at',
-        'attachment_path', 'attachment_name', 'attachment_type'
+        'attachment_path', 'attachment_name', 'attachment_type',
     ];
 
     protected $casts = [
@@ -54,9 +54,10 @@ class ForumThread extends Model
 
     public function isLocked(): bool
     {
-        if (!$this->is_assessment || !$this->deadline_at) {
+        if (! $this->is_assessment || ! $this->deadline_at) {
             return false;
         }
+
         return Carbon::now()->gt($this->deadline_at);
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * @property int $id
@@ -23,7 +23,7 @@ class Assignment extends Model
 {
     protected $fillable = [
         'course_class_id', 'title', 'description',
-        'due_date', 'attachment_path', 'attachment_name', 'is_lock'
+        'due_date', 'attachment_path', 'attachment_name', 'is_lock',
     ];
 
     protected $casts = [
@@ -43,9 +43,10 @@ class Assignment extends Model
 
     public function isOverdue(): bool
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return false;
         }
+
         return Carbon::now()->gt($this->due_date);
     }
 

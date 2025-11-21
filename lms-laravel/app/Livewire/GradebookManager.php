@@ -2,14 +2,14 @@
 
 namespace App\Livewire;
 
+use App\Models\CourseClass;
+use App\Models\GradeComponent;
+use App\Models\StudentGrade;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
-use App\Models\GradeComponent;
-use App\Models\StudentGrade;
-use App\Models\CourseClass;
 
 #[Layout('layouts.app')]
 class GradebookManager extends Component
@@ -71,17 +71,32 @@ class GradebookManager extends Component
             $gradePoint = 0.0;
             $gradeLetter = 'F';
 
-            if ($courseScore >= 90) { $gradePoint = 4.0; $gradeLetter = 'A'; }
-            elseif ($courseScore >= 85) { $gradePoint = 3.67; $gradeLetter = 'A-'; }
-            elseif ($courseScore >= 80) { $gradePoint = 3.33; $gradeLetter = 'B+'; }
-            elseif ($courseScore >= 75) { $gradePoint = 3.0; $gradeLetter = 'B'; }
-            elseif ($courseScore >= 70) { $gradePoint = 2.5; $gradeLetter = 'B-'; }
-            elseif ($courseScore >= 65) { $gradePoint = 2.0; $gradeLetter = 'C'; }
-            elseif ($courseScore >= 50) { $gradePoint = 1.0; $gradeLetter = 'D'; }
+            if ($courseScore >= 90) {
+                $gradePoint = 4.0;
+                $gradeLetter = 'A';
+            } elseif ($courseScore >= 85) {
+                $gradePoint = 3.67;
+                $gradeLetter = 'A-';
+            } elseif ($courseScore >= 80) {
+                $gradePoint = 3.33;
+                $gradeLetter = 'B+';
+            } elseif ($courseScore >= 75) {
+                $gradePoint = 3.0;
+                $gradeLetter = 'B';
+            } elseif ($courseScore >= 70) {
+                $gradePoint = 2.5;
+                $gradeLetter = 'B-';
+            } elseif ($courseScore >= 65) {
+                $gradePoint = 2.0;
+                $gradeLetter = 'C';
+            } elseif ($courseScore >= 50) {
+                $gradePoint = 1.0;
+                $gradeLetter = 'D';
+            }
 
             $sks = $courseRef->credits ?? 0; // Asumsi ada kolom credits, default 0
 
-            if($sks > 0) {
+            if ($sks > 0) {
                 $totalSKS += $sks;
                 $totalQualityPoints += ($gradePoint * $sks);
             }
@@ -96,7 +111,7 @@ class GradebookManager extends Component
                 'type' => $classes->pluck('type')->implode(' & '),
                 'score' => $courseScore,
                 'grade_letter' => $gradeLetter,
-                'semester' => $firstClass->semester
+                'semester' => $firstClass->semester,
             ];
         }
 
@@ -117,7 +132,7 @@ class GradebookManager extends Component
         return view('livewire.gradebook-manager', [
             'role' => 'student',
             'stats' => compact('totalCourses', 'gpa', 'avgScore', 'academicStatus', 'statusColor', 'totalSKS'),
-            'courses' => $processedCourses
+            'courses' => $processedCourses,
         ]);
     }
 
@@ -129,7 +144,7 @@ class GradebookManager extends Component
         return view('livewire.gradebook-manager', [
             'role' => 'lecturer',
             'stats' => compact('totalCourses'),
-            'courses' => $teachingClasses
+            'courses' => $teachingClasses,
         ]);
     }
 }

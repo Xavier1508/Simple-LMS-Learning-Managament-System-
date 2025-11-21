@@ -26,7 +26,7 @@ class CourseSession extends Model
 
     protected $fillable = [
         'course_class_id', 'title', 'learning_outcome', 'session_number',
-        'start_time', 'end_time', 'delivery_mode', 'zoom_link'
+        'start_time', 'end_time', 'delivery_mode', 'zoom_link',
     ];
 
     protected $casts = [

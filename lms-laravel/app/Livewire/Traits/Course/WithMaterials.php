@@ -10,13 +10,18 @@ trait WithMaterials
 {
     // File Upload
     public $newFile;
+
     public $showUploadModal = false;
+
     public $uploadingForSessionId = null;
 
     // Preview File
     public $previewFileUrl = null;
+
     public $previewFileType = null;
+
     public $previewFileName = null;
+
     public $showPreviewModal = false;
 
     public function openUploadModal($sessionId)
@@ -43,10 +48,10 @@ trait WithMaterials
                         'application/vnd.ms-excel',
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         'text/plain',
-                        'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'
+                        'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml',
                     ];
 
-                    if (!in_array($value->getMimeType(), $allowedMimes)) {
+                    if (! in_array($value->getMimeType(), $allowedMimes)) {
                         $fail('The file type is not allowed for security reasons.');
                     }
                 },
@@ -54,12 +59,12 @@ trait WithMaterials
         ], [
             'newFile.required' => 'Please select a file to upload.',
             'newFile.mimes' => 'Only PDF, Office documents, text files, and images are allowed.',
-            'newFile.max' => 'File size must not exceed 10MB.'
+            'newFile.max' => 'File size must not exceed 10MB.',
         ]);
 
         $originalName = $this->newFile->getClientOriginalName();
         $sanitizedName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-        $filename = time() . '_' . $sanitizedName;
+        $filename = time().'_'.$sanitizedName;
 
         $path = $this->newFile->storeAs('course_materials', $filename, 'public');
 

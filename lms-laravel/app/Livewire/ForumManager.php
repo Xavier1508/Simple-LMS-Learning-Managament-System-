@@ -2,13 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\ForumThread;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\ForumThread;
-use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.app')]
 class ForumManager extends Component
@@ -50,7 +50,7 @@ class ForumManager extends Component
         $threads = $query->latest()->paginate(10);
 
         return view('livewire.forum-manager', [
-            'threads' => $threads
+            'threads' => $threads,
         ]);
     }
 }

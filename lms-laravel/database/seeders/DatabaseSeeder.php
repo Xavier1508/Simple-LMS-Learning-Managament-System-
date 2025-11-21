@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
-            'role' => 'admin'
+            'role' => 'admin',
         ]);
 
         $this->call([

@@ -2,17 +2,17 @@
 
 namespace App\Livewire\Traits\Course;
 
+use App\Models\CourseClass;
 use App\Models\GradeComponent;
 use App\Models\StudentGrade;
-use App\Models\User;
-use App\Models\CourseClass;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 trait WithGradebook
 {
     // State
     public $gradebookState = 'list';
+
     public $selectedStudentId = null;
 
     // Input Form (Lecturer)
@@ -63,7 +63,7 @@ trait WithGradebook
                 'course_id' => $courseId,
                 'name' => $comp['name'],
                 'weight' => $comp['weight'],
-                'type' => $comp['type']
+                'type' => $comp['type'],
             ]);
         }
     }
@@ -105,7 +105,9 @@ trait WithGradebook
     // --- LOGIC SIMPAN NILAI ---
     public function saveGrades()
     {
-        if (Auth::user()->role !== 'lecturer') return;
+        if (Auth::user()->role !== 'lecturer') {
+            return;
+        }
 
         foreach ($this->inputGrades as $compId => $score) {
             // Simpan jika tidak null (bisa 0)
@@ -116,12 +118,12 @@ trait WithGradebook
                     [
                         'grade_component_id' => $compId,
                         'user_id' => $this->selectedStudentId,
-                        'course_class_id' => $this->courseClassId
+                        'course_class_id' => $this->courseClassId,
                     ],
                     [
                         'score' => $score,
                         'graded_by' => Auth::id(),
-                        'graded_at' => Carbon::now()
+                        'graded_at' => Carbon::now(),
                     ]
                 );
             }
@@ -140,7 +142,9 @@ trait WithGradebook
         $components = GradeComponent::where('course_id', $courseId)->get();
 
         // Fallback: Jika komponen belum ada (baru pertama kali load via view student), return 0
-        if ($components->isEmpty()) return ['score' => 0, 'total_weight' => 0];
+        if ($components->isEmpty()) {
+            return ['score' => 0, 'total_weight' => 0];
+        }
 
         $totalScore = 0;
         $totalWeight = 0;
@@ -158,27 +162,49 @@ trait WithGradebook
 
         return [
             'score' => round($totalScore, 2),
-            'total_weight' => $totalWeight
+            'total_weight' => $totalWeight,
         ];
     }
 
     public function getGradeLetter($score)
     {
-        if ($score >= 90) return 'A';
-        if ($score >= 85) return 'A-';
-        if ($score >= 80) return 'B+';
-        if ($score >= 75) return 'B';
-        if ($score >= 70) return 'B-';
-        if ($score >= 65) return 'C';
-        if ($score >= 50) return 'D';
+        if ($score >= 90) {
+            return 'A';
+        }
+        if ($score >= 85) {
+            return 'A-';
+        }
+        if ($score >= 80) {
+            return 'B+';
+        }
+        if ($score >= 75) {
+            return 'B';
+        }
+        if ($score >= 70) {
+            return 'B-';
+        }
+        if ($score >= 65) {
+            return 'C';
+        }
+        if ($score >= 50) {
+            return 'D';
+        }
+
         return 'F';
     }
 
     public function getGradeColor($grade)
     {
-        if (in_array($grade, ['A', 'A-'])) return 'bg-green-100 text-green-700';
-        if (in_array($grade, ['B+', 'B', 'B-'])) return 'bg-blue-100 text-blue-700';
-        if ($grade === 'C') return 'bg-yellow-100 text-yellow-700';
+        if (in_array($grade, ['A', 'A-'])) {
+            return 'bg-green-100 text-green-700';
+        }
+        if (in_array($grade, ['B+', 'B', 'B-'])) {
+            return 'bg-blue-100 text-blue-700';
+        }
+        if ($grade === 'C') {
+            return 'bg-yellow-100 text-yellow-700';
+        }
+
         return 'bg-red-100 text-red-700';
     }
 }

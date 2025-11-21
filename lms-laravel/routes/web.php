@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AssessmentController;
-use App\Http\Controllers\ForumController;
-use App\Http\Controllers\ScheduleController;
 
 // Landing Page
 Route::get('/', function () {
@@ -39,12 +36,12 @@ Route::middleware('guest')->group(function () {
     \Livewire\Volt\Volt::route('login/lecturer', 'pages.auth.login-lecturer')->name('login.lecturer');
 });
 
-Route::get('/fix-sessions', function() {
+Route::get('/fix-sessions', function () {
     $classes = \App\Models\CourseClass::with('sessions')->get();
 
-    foreach($classes as $class) {
+    foreach ($classes as $class) {
         // Jika kelas belum punya sesi, buatkan!
-        if($class->sessions->count() == 0) {
+        if ($class->sessions->count() == 0) {
             $startDate = \Carbon\Carbon::now()->subWeeks(2)->next('Monday')->setTime(10, 0); // Mulai dari 2 minggu lalu biar ada history
 
             for ($i = 1; $i <= 13; $i++) {
@@ -52,7 +49,7 @@ Route::get('/fix-sessions', function() {
                 \App\Models\CourseSession::create([
                     'course_class_id' => $class->id,
                     'session_number' => $i,
-                    'title' => "Session $i: Fundamentals of " . $class->course->title,
+                    'title' => "Session $i: Fundamentals of ".$class->course->title,
                     'learning_outcome' => "Students are expected to master the key elements of {$class->course->title} part $i.",
                     'start_time' => $startDate->copy(),
                     'end_time' => $startDate->copy()->addMinutes(100),
@@ -63,5 +60,6 @@ Route::get('/fix-sessions', function() {
             }
         }
     }
-    return "DONE! All empty classes now have 13 sessions.";
+
+    return 'DONE! All empty classes now have 13 sessions.';
 });

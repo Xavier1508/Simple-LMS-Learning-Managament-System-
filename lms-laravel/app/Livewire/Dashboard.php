@@ -2,17 +2,17 @@
 
 namespace App\Livewire;
 
-use App\Models\User;
-use Illuminate\View\View;
-use Livewire\Attributes\Layout;
-use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use App\Models\Assignment;
+use App\Models\CourseClass;
 use App\Models\CourseSession;
 use App\Models\GradeComponent;
 use App\Models\StudentGrade;
-use App\Models\CourseClass;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Dashboard extends Component
@@ -38,7 +38,7 @@ class Dashboard extends Component
         return view('livewire.dashboard', array_merge([
             'greeting' => $greeting,
             'announcements' => $announcements,
-            'user' => $user
+            'user' => $user,
         ], $data));
     }
 
@@ -101,7 +101,7 @@ class Dashboard extends Component
             'active_courses' => $enrolledClasses->count(),
             'pending_tasks_count' => Assignment::whereIn('course_class_id', $classIds)->where('due_date', '>', $now)->count(),
             'upcoming_tasks' => $upcomingTasks,
-            'todaysClasses' => $todaysClasses
+            'todaysClasses' => $todaysClasses,
         ];
     }
 
@@ -115,7 +115,7 @@ class Dashboard extends Component
 
         // 1. Total Students
         $totalStudents = 0;
-        foreach($teachingClasses as $class) {
+        foreach ($teachingClasses as $class) {
             /** @var CourseClass $class */
             $totalStudents += $class->students()->count();
         }
@@ -139,15 +139,20 @@ class Dashboard extends Component
             'total_students' => $totalStudents,
             'active_classes' => $teachingClasses->count(),
             'todaysClasses' => $todaysClasses,
-            'tasks_to_grade' => $tasksToGrade
+            'tasks_to_grade' => $tasksToGrade,
         ];
     }
 
     private function getGreeting(): string
     {
         $hour = (int) date('H');
-        if ($hour < 12) return 'Good Morning';
-        if ($hour < 18) return 'Good Afternoon';
+        if ($hour < 12) {
+            return 'Good Morning';
+        }
+        if ($hour < 18) {
+            return 'Good Afternoon';
+        }
+
         return 'Good Evening';
     }
 
@@ -161,20 +166,20 @@ class Dashboard extends Component
                 'title' => 'System Maintenance Schedule',
                 'date' => '25 Nov 2025',
                 'color' => 'bg-red-100 text-red-600',
-                'icon' => 'server'
+                'icon' => 'server',
             ],
             [
                 'title' => 'Midterm Exam Guidelines',
                 'date' => '28 Nov 2025',
                 'color' => 'bg-blue-100 text-blue-600',
-                'icon' => 'file-text'
+                'icon' => 'file-text',
             ],
             [
                 'title' => 'Holiday Announcement',
                 'date' => '01 Dec 2025',
                 'color' => 'bg-green-100 text-green-600',
-                'icon' => 'calendar'
-            ]
+                'icon' => 'calendar',
+            ],
         ];
     }
 }

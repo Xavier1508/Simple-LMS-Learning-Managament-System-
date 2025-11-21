@@ -2,42 +2,43 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Traits\Course\WithAssessment;
+use App\Livewire\Traits\Course\WithAttendance;
+use App\Livewire\Traits\Course\WithForum;
+use App\Livewire\Traits\Course\WithGradebook;
+use App\Livewire\Traits\Course\WithMaterials;
+use App\Livewire\Traits\Course\WithPeople;
 use App\Models\CourseClass;
 use App\Models\CourseSession;
 use Carbon\Carbon;
+// Import Traits
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-// Import Traits
-use App\Livewire\Traits\Course\WithAttendance;
-use App\Livewire\Traits\Course\WithMaterials;
-use App\Livewire\Traits\Course\WithForum;
-use App\Livewire\Traits\Course\WithAssessment;
-use App\Livewire\Traits\Course\WithGradebook;
-use App\Livewire\Traits\Course\WithPeople;
-
 /**
  * Mendefinisikan properti magic untuk PHPStan
+ *
  * @property CourseClass $class
  */
 #[Layout('layouts.app')]
 class CourseDetail extends Component
 {
-    use WithFileUploads;
-
-    use WithAttendance;
-    use WithMaterials;
-    use WithForum;
     use WithAssessment;
+    use WithAttendance;
+    use WithFileUploads;
+    use WithForum;
     use WithGradebook;
+    use WithMaterials;
     use WithPeople;
 
     public int $courseClassId;
+
     public string $activeTab = 'session';
+
     public ?int $activeSessionId = null;
 
     public function mount(int $id): void
@@ -56,12 +57,12 @@ class CourseDetail extends Component
 
         /** @var CourseSession|null $closestSession */
         $closestSession = CourseSession::where('course_class_id', $id)
-            ->orderByRaw("ABS(TIMESTAMPDIFF(SECOND, start_time, ?))", [$now])
+            ->orderByRaw('ABS(TIMESTAMPDIFF(SECOND, start_time, ?))', [$now])
             ->first();
 
         if ($reqSession && is_numeric($reqSession)) {
             $this->activeSessionId = (int) $reqSession;
-            if (!$reqTab) {
+            if (! $reqTab) {
                 $this->activeTab = 'session';
             }
         } elseif ($closestSession) {
@@ -86,9 +87,9 @@ class CourseDetail extends Component
             'lecturer',
             'sessions.materials',
             'sessions.attendances',
-            'students' => function($query) {
+            'students' => function ($query) {
                 $query->orderBy('first_name');
-            }
+            },
         ])->findOrFail($this->courseClassId);
 
         return $class;
@@ -127,7 +128,7 @@ class CourseDetail extends Component
                 'min_attendance' => 11,
                 'percentage' => $totalSessions > 0
                     ? round(($myAttendances / $totalSessions) * 100)
-                    : 0
+                    : 0,
             ];
         } else {
             $totalStudents = $courseClass->students->count();
@@ -143,14 +144,14 @@ class CourseDetail extends Component
                 'total_sessions' => $totalSessions,
                 'total_presents' => $totalPresents,
                 'average_attendance' => $totalSlots > 0
-                    ? round(($totalPresents / $totalSlots) * 100) . '%'
-                    : '0%'
+                    ? round(($totalPresents / $totalSlots) * 100).'%'
+                    : '0%',
             ];
         }
 
         return view('livewire.course-detail', [
             'class' => $courseClass,
-            'attendanceSummary' => $summary
+            'attendanceSummary' => $summary,
         ]);
     }
 }

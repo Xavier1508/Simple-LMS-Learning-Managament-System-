@@ -12,10 +12,15 @@ trait WithAttendance
 {
     // --- VARIABEL ATTENDANCE MANUAL (DOSEN) ---
     public $showManualAttendanceModal = false;
+
     public $manualStudentName = '';
+
     public $manualSessionTitle = '';
+
     public $manualSessionId = null;
+
     public $manualStudentId = null;
+
     public $manualStatus = 'present';
 
     // --- FITUR ATTENDANCE (STUDENT) ---
@@ -24,7 +29,9 @@ trait WithAttendance
         $session = CourseSession::find($sessionId);
         $user = Auth::user();
 
-        if (!$session || $user->role !== 'student') return;
+        if (! $session || $user->role !== 'student') {
+            return;
+        }
 
         $now = Carbon::now();
         $openTime = $session->start_time->copy()->subMinutes(30);
@@ -33,6 +40,7 @@ trait WithAttendance
         // 1. VALIDASI WAKTU KETAT
         if ($now->lt($openTime)) {
             session()->flash('error', 'Attendance not yet open.');
+
             return;
         }
 
@@ -44,10 +52,11 @@ trait WithAttendance
                 [
                     'status' => 'absent',
                     'attended_at' => $now,
-                    'recorded_by' => null // Null artinya System/Auto
+                    'recorded_by' => null, // Null artinya System/Auto
                 ]
             );
             session()->flash('error', 'Attendance closed. You are marked as absent/late.');
+
             return;
         }
 
@@ -57,7 +66,7 @@ trait WithAttendance
             [
                 'status' => 'present',
                 'attended_at' => $now,
-                'recorded_by' => $user->id // Self recorded
+                'recorded_by' => $user->id, // Self recorded
             ]
         );
 
@@ -70,11 +79,11 @@ trait WithAttendance
         $student = User::find($studentId);
         $session = CourseSession::find($sessionId);
 
-        if($student && $session) {
+        if ($student && $session) {
             $this->manualStudentId = $studentId;
             $this->manualSessionId = $sessionId;
-            $this->manualStudentName = $student->first_name . ' ' . $student->last_name;
-            $this->manualSessionTitle = "Session " . $session->session_number;
+            $this->manualStudentName = $student->first_name.' '.$student->last_name;
+            $this->manualSessionTitle = 'Session '.$session->session_number;
 
             // Cek status sekarang
             $currentAttendance = Attendance::where('course_session_id', $sessionId)
@@ -88,18 +97,20 @@ trait WithAttendance
 
     public function saveManualAttendance()
     {
-        if (Auth::user()->role !== 'lecturer') return;
+        if (Auth::user()->role !== 'lecturer') {
+            return;
+        }
 
         // FIX ERROR SQL: Pastikan kolom recorded_by diisi ID Dosen
         Attendance::updateOrCreate(
             [
                 'course_session_id' => $this->manualSessionId,
-                'user_id' => $this->manualStudentId
+                'user_id' => $this->manualStudentId,
             ],
             [
                 'status' => $this->manualStatus,
                 'attended_at' => Carbon::now(),
-                'recorded_by' => Auth::id() // PENTING: ID Dosen
+                'recorded_by' => Auth::id(), // PENTING: ID Dosen
             ]
         );
 
@@ -116,15 +127,16 @@ trait WithAttendance
         $now = Carbon::now();
 
         // Skenario 1: Belum ada record sama sekali
-        if (!$attendance) {
-             // Jika waktu sudah lewat -> Absent (Merah)
-             if ($now->gt($session->start_time->copy()->addMinutes(15))) {
+        if (! $attendance) {
+            // Jika waktu sudah lewat -> Absent (Merah)
+            if ($now->gt($session->start_time->copy()->addMinutes(15))) {
                 return ['type' => 'absent', 'label' => 'Missed / Absent', 'color' => 'red', 'icon' => 'x'];
             }
             // Jika belum mulai -> Upcoming (Kuning)
             if ($now->lt($session->start_time)) {
                 return ['type' => 'upcoming', 'label' => 'Waiting for session', 'color' => 'yellow', 'icon' => 'clock'];
             }
+
             // Sedang berlangsung -> Open (Biru/Orange)
             return ['type' => 'open', 'label' => 'Check-In Open', 'color' => 'blue', 'icon' => 'play'];
         }

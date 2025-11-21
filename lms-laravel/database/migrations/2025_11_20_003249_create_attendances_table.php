@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         // INI PERUBAHANNYA: Cek dulu apakah tabelnya sudah ada?
-        if (!Schema::hasTable('attendances')) {
+        if (! Schema::hasTable('attendances')) {
 
             Schema::create('attendances', function (Blueprint $table) {
                 $table->id();

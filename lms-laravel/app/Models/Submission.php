@@ -23,7 +23,7 @@ class Submission extends Model
 {
     protected $fillable = [
         'assignment_id', 'user_id', 'file_path', 'file_name',
-        'text_content', 'grade', 'feedback', 'submitted_at', 'status'
+        'text_content', 'grade', 'feedback', 'submitted_at', 'status',
     ];
 
     protected $casts = [

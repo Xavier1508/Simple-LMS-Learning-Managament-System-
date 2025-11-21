@@ -4,32 +4,39 @@ namespace App\Livewire;
 
 use App\Models\Course;
 use App\Models\CourseClass;
+use App\Models\CourseSession;
 use App\Models\Enrollment;
 use App\Models\User;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Str;
-use App\Models\CourseSession;
+use Illuminate\View\View;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class CourseManager extends Component
 {
     // Filter Variables
     public string $selectedSemester = '2025, Odd Semester';
+
     public string $selectedType = 'ALL';
 
     // Modal Variables
     public bool $showAddModal = false;
+
     public bool $showDeleteModal = false;
+
     public ?int $classToDeleteId = null;
 
     // Input Form Variables
     public string $title = '';
+
     public string $class_code = '';
+
     public string $type = 'LEC';
+
     public string $description = '';
+
     public ?string $student_email_invite = null;
 
     // VARIABEL BARU: Dropdown Jurusan
@@ -39,13 +46,13 @@ class CourseManager extends Component
     /** @var array<string, string> */
     public array $majors = [
         'COMP' => 'Computer Science / IT',
-        'DKV'  => 'Desain Komunikasi Visual',
+        'DKV' => 'Desain Komunikasi Visual',
         'ACCT' => 'Accounting',
-        'LAW'  => 'Law / Hukum',
+        'LAW' => 'Law / Hukum',
         'MGMT' => 'Management',
-        'ENG'  => 'Engineering',
+        'ENG' => 'Engineering',
         'COMM' => 'Communication',
-        'PSYC' => 'Psychology'
+        'PSYC' => 'Psychology',
     ];
 
     // Rules Validasi
@@ -62,7 +69,7 @@ class CourseManager extends Component
     {
         do {
             $randomNumbers = str_pad((string) mt_rand(0, 9999999), 7, '0', STR_PAD_LEFT);
-            $code = $prefix . $randomNumbers;
+            $code = $prefix.$randomNumbers;
         } while (Course::where('code', $code)->exists());
 
         return $code;
@@ -81,7 +88,7 @@ class CourseManager extends Component
             ['code' => $generatedCode],
             [
                 'title' => $this->title,
-                'description' => $this->description
+                'description' => $this->description,
             ]
         );
 
@@ -104,7 +111,7 @@ class CourseManager extends Component
             CourseSession::create([
                 'course_class_id' => $newClass->id,
                 'session_number' => $i,
-                'title' => "Session $i: Topic about " . Str::limit($course->title, 20),
+                'title' => "Session $i: Topic about ".Str::limit($course->title, 20),
                 'learning_outcome' => "Students will understand the fundamental concepts of topic $i in {$course->title} and apply them in real-world scenarios.",
                 'start_time' => $startDate->copy(),
                 'end_time' => $startDate->copy()->addMinutes(100),
@@ -122,7 +129,7 @@ class CourseManager extends Component
             if ($student && $student->role === 'student') {
                 Enrollment::create([
                     'user_id' => $student->id,
-                    'course_class_id' => $newClass->id
+                    'course_class_id' => $newClass->id,
                 ]);
             }
         }
@@ -172,7 +179,7 @@ class CourseManager extends Component
         }
 
         return view('livewire.course-manager', [
-            'courses' => $query->get()
+            'courses' => $query->get(),
         ]);
     }
 }

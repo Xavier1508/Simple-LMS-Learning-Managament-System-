@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Traits\Course;
 
-use App\Models\User;
 use App\Models\Enrollment;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 trait WithPeople
@@ -31,11 +31,11 @@ trait WithPeople
 
         return User::query()
             ->whereNotIn('id', $existingUserIds) // Jangan tampilkan yang sudah join
-            ->where(function($query) {
-                $query->where('first_name', 'like', '%' . $this->addMemberSearch . '%')
-                      ->orWhere('last_name', 'like', '%' . $this->addMemberSearch . '%')
-                      ->orWhere('email', 'like', '%' . $this->addMemberSearch . '%')
-                      ->orWhere('lecturer_code', 'like', '%' . $this->addMemberSearch . '%'); // Bisa cari kode dosen/nim
+            ->where(function ($query) {
+                $query->where('first_name', 'like', '%'.$this->addMemberSearch.'%')
+                    ->orWhere('last_name', 'like', '%'.$this->addMemberSearch.'%')
+                    ->orWhere('email', 'like', '%'.$this->addMemberSearch.'%')
+                    ->orWhere('lecturer_code', 'like', '%'.$this->addMemberSearch.'%'); // Bisa cari kode dosen/nim
             })
             ->take(10) // Limit 10 row sesuai request
             ->get();
@@ -44,7 +44,9 @@ trait WithPeople
     // --- ACTION: ADD MEMBER ---
     public function addMember($userId)
     {
-        if (Auth::user()->role !== 'lecturer') return;
+        if (Auth::user()->role !== 'lecturer') {
+            return;
+        }
 
         $user = User::find($userId);
 
@@ -54,13 +56,13 @@ trait WithPeople
                 // Masukkan ke tabel Enrollment
                 Enrollment::firstOrCreate([
                     'user_id' => $user->id,
-                    'course_class_id' => $this->courseClassId
+                    'course_class_id' => $this->courseClassId,
                 ]);
                 session()->flash('message', "Student {$user->first_name} added successfully.");
             } else {
                 // Jika logic mengizinkan multiple lecturer/TA, tambahkan disini.
                 // Untuk sekarang kita anggap add people = add student.
-                session()->flash('error', "Cannot add another Lecturer to this class (System Restriction).");
+                session()->flash('error', 'Cannot add another Lecturer to this class (System Restriction).');
             }
         }
 
@@ -72,7 +74,9 @@ trait WithPeople
     // --- ACTION: REMOVE MEMBER (Opsional tapi penting) ---
     public function removeMember($userId)
     {
-        if (Auth::user()->role !== 'lecturer') return;
+        if (Auth::user()->role !== 'lecturer') {
+            return;
+        }
 
         Enrollment::where('user_id', $userId)
             ->where('course_class_id', $this->courseClassId)

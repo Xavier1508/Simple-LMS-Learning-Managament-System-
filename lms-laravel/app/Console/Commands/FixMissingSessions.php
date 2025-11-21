@@ -2,16 +2,17 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\CourseClass;
 use App\Models\CourseSession;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
 class FixMissingSessions extends Command
 {
     // Nama command yang akan kita panggil nanti
     protected $signature = 'course:fix-sessions';
+
     protected $description = 'Generate 13 default sessions for classes that have none';
 
     public function handle()
@@ -23,6 +24,7 @@ class FixMissingSessions extends Command
 
         if ($classes->isEmpty()) {
             $this->info('All classes already have sessions. Good job!');
+
             return;
         }
 
@@ -39,7 +41,7 @@ class FixMissingSessions extends Command
                 CourseSession::create([
                     'course_class_id' => $class->id,
                     'session_number' => $i,
-                    'title' => "Session $i: Topic about " . Str::limit($class->course->title ?? 'Subject', 20),
+                    'title' => "Session $i: Topic about ".Str::limit($class->course->title ?? 'Subject', 20),
                     'learning_outcome' => "Students will understand the fundamental concepts of topic $i.",
                     'start_time' => $startDate->copy(),
                     'end_time' => $startDate->copy()->addMinutes(100),
@@ -54,6 +56,6 @@ class FixMissingSessions extends Command
 
         $bar->finish();
         $this->newLine();
-        $this->info('Successfully generated sessions for ' . $classes->count() . ' classes.');
+        $this->info('Successfully generated sessions for '.$classes->count().' classes.');
     }
 }

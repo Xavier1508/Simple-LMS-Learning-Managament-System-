@@ -2,13 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\Assignment;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Assignment;
-use Carbon\Carbon;
 
 #[Layout('layouts.app')]
 class AssessmentManager extends Component
@@ -39,7 +39,7 @@ class AssessmentManager extends Component
 
         // 2. Query Assignment
         $query = Assignment::whereIn('course_class_id', $classIds)
-            ->with(['class.course', 'submissions' => function($q) use ($user) {
+            ->with(['class.course', 'submissions' => function ($q) use ($user) {
                 $q->where('user_id', $user->id); // Eager load submission user ini saja
             }]);
 
@@ -57,7 +57,7 @@ class AssessmentManager extends Component
 
             if ($this->filter === 'upcoming') {
                 // Tampilkan jika BELUM submit DAN BELUM telat
-                return !$isSubmitted && !$isOverdue;
+                return ! $isSubmitted && ! $isOverdue;
             } else {
                 // History: SUDAH submit ATAU SUDAH telat
                 return $isSubmitted || $isOverdue;
@@ -73,7 +73,7 @@ class AssessmentManager extends Component
 
         return view('livewire.assessment-manager', [
             'role' => 'student',
-            'assignments' => $assignments
+            'assignments' => $assignments,
         ]);
     }
 
@@ -95,7 +95,7 @@ class AssessmentManager extends Component
             $isOverdue = $assign->due_date && $now->gt($assign->due_date);
 
             if ($this->filter === 'upcoming') {
-                return !$isOverdue; // Masih aktif
+                return ! $isOverdue; // Masih aktif
             } else {
                 return $isOverdue; // Sudah lewat deadline
             }
@@ -105,7 +105,7 @@ class AssessmentManager extends Component
 
         return view('livewire.assessment-manager', [
             'role' => 'lecturer',
-            'assignments' => $assignments
+            'assignments' => $assignments,
         ]);
     }
 }

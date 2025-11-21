@@ -58,7 +58,7 @@ class AttendanceManager extends Component
         $rateStatus = [
             'color' => 'black',
             'text' => 'Drop Out / Failed',
-            'bg' => 'gray'
+            'bg' => 'gray',
         ];
 
         if ($attendanceRate >= 83) {
@@ -95,10 +95,10 @@ class AttendanceManager extends Component
                     'start_time' => $session->start_time ? $session->start_time->format('H:i') : '-',
                     'end_time' => $session->end_time ? $session->end_time->format('H:i') : '-',
                     'course_code' => $session->class->course->code,
-                    'class_code' => $session->class->class_code . ' - ' . $session->class->type,
+                    'class_code' => $session->class->class_code.' - '.$session->class->type,
                     'status' => $status,
                     'remark' => $remark,
-                    'css_class' => $cssClass
+                    'css_class' => $cssClass,
                 ];
             });
 
@@ -106,7 +106,7 @@ class AttendanceManager extends Component
             'role' => 'student',
             'stats' => compact('totalCourses', 'totalSessions', 'totalAttended', 'totalLateAbsent', 'attendanceRate', 'rateStatus'),
             'courses' => $enrolledClasses,
-            'logs' => $logs
+            'logs' => $logs,
         ]);
     }
 
@@ -154,9 +154,9 @@ class AttendanceManager extends Component
                     'start_time' => $session->start_time ? $session->start_time->format('H:i') : '-',
                     'end_time' => $session->end_time ? $session->end_time->format('H:i') : '-',
                     'course_code' => $session->class->course->code,
-                    'class_code' => $session->class->class_code . ' - ' . $session->class->type,
+                    'class_code' => $session->class->class_code.' - '.$session->class->type,
                     'status' => $status,
-                    'css_class' => $cssClass
+                    'css_class' => $cssClass,
                 ];
             });
 
@@ -164,7 +164,7 @@ class AttendanceManager extends Component
             'role' => 'lecturer',
             'stats' => compact('totalCourses', 'totalSessionsToTeach'),
             'courses' => $teachingClasses,
-            'logs' => $logs
+            'logs' => $logs,
         ]);
     }
 }

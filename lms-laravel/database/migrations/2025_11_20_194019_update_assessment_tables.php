@@ -10,11 +10,11 @@ return new class extends Migration
     {
         // Update Tabel Assignments (Soal dari Dosen)
         Schema::table('assignments', function (Blueprint $table) {
-            if (!Schema::hasColumn('assignments', 'attachment_path')) {
+            if (! Schema::hasColumn('assignments', 'attachment_path')) {
                 $table->string('attachment_path')->nullable(); // File soal
                 $table->string('attachment_name')->nullable();
             }
-            if (!Schema::hasColumn('assignments', 'is_lock')) {
+            if (! Schema::hasColumn('assignments', 'is_lock')) {
                 $table->boolean('is_lock')->default(false); // Manual lock oleh dosen
             }
         });
@@ -24,13 +24,13 @@ return new class extends Migration
             // Kita ubah file_path jadi nullable karena siswa bisa submit via text saja
             $table->string('file_path')->nullable()->change();
 
-            if (!Schema::hasColumn('submissions', 'file_name')) {
+            if (! Schema::hasColumn('submissions', 'file_name')) {
                 $table->string('file_name')->nullable();
             }
-            if (!Schema::hasColumn('submissions', 'text_content')) {
+            if (! Schema::hasColumn('submissions', 'text_content')) {
                 $table->longText('text_content')->nullable(); // Input text langsung
             }
-            if (!Schema::hasColumn('submissions', 'status')) {
+            if (! Schema::hasColumn('submissions', 'status')) {
                 $table->enum('status', ['submitted', 'late', 'graded'])->default('submitted');
             }
         });

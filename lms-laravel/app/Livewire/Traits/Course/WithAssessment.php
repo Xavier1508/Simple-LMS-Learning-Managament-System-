@@ -13,14 +13,23 @@ trait WithAssessment
 {
     // State Management
     public $assessmentState = 'list'; // list, create, detail
+
     public $selectedAssignmentId = null;
 
     // Create Assessment (Lecturer)
-    public $newAssessTitle, $newAssessDesc, $newAssessFile, $newAssessDue;
+    public $newAssessTitle;
+
+    public $newAssessDesc;
+
+    public $newAssessFile;
+
+    public $newAssessDue;
 
     // Submission (Student)
     public $submissionFile;
+
     public $submissionText; // Untuk input text yg akan di-convert ke TXT
+
     public $showSubmitConfirmModal = false; // Modal konfirmasi "Are you sure?"
 
     // --- NAVIGASI ---
@@ -45,7 +54,9 @@ trait WithAssessment
     // --- LECTURER: CREATE ASSIGNMENT ---
     public function createAssignment()
     {
-        if (Auth::user()->role !== 'lecturer') return;
+        if (Auth::user()->role !== 'lecturer') {
+            return;
+        }
 
         $this->validate([
             'newAssessTitle' => 'required|string|max:255',
@@ -83,8 +94,9 @@ trait WithAssessment
             'submissionText' => 'nullable|string',
         ]);
 
-        if (!$this->submissionFile && empty($this->submissionText)) {
+        if (! $this->submissionFile && empty($this->submissionText)) {
             $this->addError('submissionFile', 'Please upload a file or write a response.');
+
             return;
         }
 
@@ -98,6 +110,7 @@ trait WithAssessment
         // Security Check: Deadline & Lock
         if ($assignment->isOverdue() || $assignment->is_lock) {
             session()->flash('error', 'Submission is closed or overdue.');
+
             return;
         }
 
@@ -121,7 +134,7 @@ trait WithAssessment
                 'file_name' => $name,
                 'text_content' => $this->submissionText, // Simpan text mentah juga
                 'submitted_at' => Carbon::now(),
-                'status' => $status
+                'status' => $status,
             ]
         );
 
@@ -138,12 +151,12 @@ trait WithAssessment
         $submission = Submission::find($submissionId);
 
         if ($submission && $submission->text_content) {
-            $content = "Student Name: " . $submission->user->name . "\n";
-            $content .= "Submitted At: " . $submission->submitted_at . "\n";
+            $content = 'Student Name: '.$submission->user->name."\n";
+            $content .= 'Submitted At: '.$submission->submitted_at."\n";
             $content .= "------------------------------------------------\n\n";
             $content .= $submission->text_content;
 
-            $fileName = 'text_submission_' . Str::slug($submission->user->name) . '.txt';
+            $fileName = 'text_submission_'.Str::slug($submission->user->name).'.txt';
 
             return response()->streamDownload(function () use ($content) {
                 echo $content;

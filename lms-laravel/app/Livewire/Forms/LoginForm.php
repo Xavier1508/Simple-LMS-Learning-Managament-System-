@@ -24,7 +24,7 @@ class LoginForm extends Form
     /**
      * Attempt to authenticate the request's credentials.
      *
-     * @param string $expectedRole Peran (role) yang diharapkan saat login (student/lecturer).
+     * @param  string  $expectedRole  Peran (role) yang diharapkan saat login (student/lecturer).
      */
     public function authenticate(string $expectedRole): void
     {

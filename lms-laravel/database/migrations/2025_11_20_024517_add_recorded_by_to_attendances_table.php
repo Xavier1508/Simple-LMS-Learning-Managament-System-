@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('attendances', function (Blueprint $table) {
             // Menambahkan kolom recorded_by jika belum ada
-            if (!Schema::hasColumn('attendances', 'recorded_by')) {
+            if (! Schema::hasColumn('attendances', 'recorded_by')) {
                 $table->foreignId('recorded_by')->nullable()->after('attended_at')->constrained('users')->nullOnDelete();
             }
         });
