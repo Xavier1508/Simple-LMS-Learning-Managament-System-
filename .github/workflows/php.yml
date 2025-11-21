@@ -1,0 +1,83 @@
+name: PHP Composer CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout source code
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # 2. Setup PHP (versi bisa ganti)
+    - name: Setup PHP 8.3
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        tools: composer
+        coverage: none
+        extensions: mbstring, intl, pdo_mysql
+
+    # 3. Validate composer.json
+    - name: Validate Composer Files
+      run: composer validate --strict
+
+    # 4. Cache vendor + composer cache dir
+    - name: Get Composer Cache Directory
+      id: composer-cache-dir
+      run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Composer Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          vendor
+          ${{ steps.composer-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    # 5. Install Composer Dependencies
+    - name: Install Dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    # 6. Laravel Environment (opsional untuk project Laravel)
+    - name: Prepare Laravel
+      if: exists('artisan')
+      run: |
+        cp .env.example .env || true
+        php artisan key:generate
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
+
+    # 7. Run Static Analysis (opsional)
+    - name: PHPStan Analyse
+      if: exists('phpstan.neon') || exists('phpstan.neon.dist')
+      run: vendor/bin/phpstan analyse
+
+    # 8. Run Tests (PHPUnit)
+    - name: Run Test Suite
+      if: exists('vendor/bin/phpunit')
+      run: vendor/bin/phpunit --testdox
+
+    # 9. Upload Test Reports (opsional)
+    - name: Upload Logs and Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ci-artifacts
+        path: |
+          storage/logs
+          tests/_output
+          junit.xml
+        retention-days: 7
