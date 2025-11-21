@@ -8,10 +8,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-// Import Traits (Fitur Modular)
+// Import Traits
 use App\Livewire\Traits\Course\WithAttendance;
 use App\Livewire\Traits\Course\WithMaterials;
 use App\Livewire\Traits\Course\WithForum;
@@ -19,12 +20,15 @@ use App\Livewire\Traits\Course\WithAssessment;
 use App\Livewire\Traits\Course\WithGradebook;
 use App\Livewire\Traits\Course\WithPeople;
 
+/**
+ * Mendefinisikan properti magic untuk PHPStan
+ * @property CourseClass $class
+ */
 #[Layout('layouts.app')]
 class CourseDetail extends Component
 {
     use WithFileUploads;
 
-    // Gunakan Semua Trait
     use WithAttendance;
     use WithMaterials;
     use WithForum;
@@ -33,56 +37,61 @@ class CourseDetail extends Component
     use WithPeople;
 
     public int $courseClassId;
-    public string $activeTab = 'session'; // Default tab
+    public string $activeTab = 'session';
     public ?int $activeSessionId = null;
 
     public function mount(int $id): void
     {
         $this->courseClassId = $id;
-        // Menangkap parameter '?tab=' dari URL
-        $reqTab = request()->query('tab');
 
+        $reqTab = request()->query('tab');
         if (is_string($reqTab)) {
-            // Validasi agar hanya tab yang valid yang diproses
             if (in_array($reqTab, ['session', 'attendance', 'gradebook', 'forum', 'assessment', 'people'])) {
                 $this->activeTab = $reqTab;
             }
         }
 
-        // --- 2. LOGIC SELECT SESSION (SCHEDULE) ---
-        // Menangkap parameter '?session_id=' dari URL
         $reqSession = request()->query('session_id');
-
-        // Cari session terdekat berdasarkan waktu sekarang (Default behavior)
         $now = Carbon::now();
+
         /** @var CourseSession|null $closestSession */
         $closestSession = CourseSession::where('course_class_id', $id)
             ->orderByRaw("ABS(TIMESTAMPDIFF(SECOND, start_time, ?))", [$now])
             ->first();
 
-        // PENENTUAN SESSION ID (PRIORITY LEVEL)
         if ($reqSession && is_numeric($reqSession)) {
-            // PRIORITAS 1: Jika ada request spesifik dari Jadwal/Kalender
             $this->activeSessionId = (int) $reqSession;
-
-            // Opsional: Jika tab tidak diset spesifik, paksa ke tab session
             if (!$reqTab) {
                 $this->activeTab = 'session';
             }
         } elseif ($closestSession) {
-            // PRIORITAS 2: Session yang sedang berlangsung / terdekat waktunya
             $this->activeSessionId = $closestSession->id;
         } else {
-            // PRIORITAS 3: Fallback ke session pertama jika belum ada jadwal
             /** @var CourseSession|null $first */
             $first = CourseSession::where('course_class_id', $id)->first();
             $this->activeSessionId = $first ? $first->id : null;
         }
 
-        // Pastikan method ini ada di trait WithGradebook
         if (method_exists($this, 'ensureGradeComponentsExist')) {
             $this->ensureGradeComponentsExist();
         }
+    }
+
+    #[Computed]
+    public function class(): CourseClass
+    {
+        /** @var CourseClass $class */
+        $class = CourseClass::with([
+            'course',
+            'lecturer',
+            'sessions.materials',
+            'sessions.attendances',
+            'students' => function($query) {
+                $query->orderBy('first_name');
+            }
+        ])->findOrFail($this->courseClassId);
+
+        return $class;
     }
 
     public function switchTab(string $tab): void
@@ -97,24 +106,14 @@ class CourseDetail extends Component
 
     public function render(): View
     {
-        /** @var CourseClass $courseClass */
-        $courseClass = CourseClass::with([
-            'course',
-            'lecturer',
-            'sessions.materials',
-            'sessions.attendances',
-            'students' => function($query) {
-                $query->orderBy('first_name'); // Urutkan siswa A-Z
-            }
-        ])->findOrFail($this->courseClassId);
+        // Kita akses Computed Property via $this->class
+        $courseClass = $this->class;
 
-        // --- LOGIC SUMMARY ATTENDANCE (Untuk Tab Attendance) ---
         $summary = [];
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($user->role === 'student') {
-            // Hitung kehadiran siswa login
             $myAttendances = \App\Models\Attendance::where('user_id', $user->id)
                 ->whereIn('course_session_id', $courseClass->sessions->pluck('id'))
                 ->where('status', 'present')
@@ -131,10 +130,8 @@ class CourseDetail extends Component
                     : 0
             ];
         } else {
-            // Hitung rata-rata kehadiran seluruh kelas (Lecturer)
             $totalStudents = $courseClass->students->count();
             $totalSessions = $courseClass->sessions->count();
-
             $totalSlots = $totalStudents * $totalSessions;
 
             $totalPresents = \App\Models\Attendance::whereIn('course_session_id', $courseClass->sessions->pluck('id'))
