@@ -13,10 +13,30 @@ class GlobalSearch extends Component
     public $query = '';
     public $results = [];
 
-    // Reset hasil jika query kosong
+    // PERBAIKAN: Menambahkan properti public agar dikenali oleh Blade
+    public $showAdvancedSearch = false;
+
+    // Reset hasil jika query berubah
     public function updatedQuery()
     {
         $this->search();
+    }
+
+    // PERBAIKAN: Menambahkan method untuk membuka modal
+    public function openAdvancedSearch()
+    {
+        $this->showAdvancedSearch = true;
+
+        // Opsional: Jika sudah ada query, langsung jalankan search saat modal dibuka
+        if (strlen($this->query) >= 2) {
+            $this->search();
+        }
+    }
+
+    // PERBAIKAN: Menambahkan method untuk menutup modal
+    public function closeAdvancedSearch()
+    {
+        $this->showAdvancedSearch = false;
     }
 
     public function search()
@@ -53,7 +73,7 @@ class GlobalSearch extends Component
 
         // 2. SEARCH ASSIGNMENTS
         // Cari tugas yang relevan dengan user
-        $classIds = $courses->pluck('id')->toArray(); // Optimasi sederhana: cari di kelas yg ketemu dulu, atau ambil semua kelas user
+        $classIds = $courses->pluck('id')->toArray(); // Optimasi sederhana
         if(empty($classIds)) {
              $classIds = ($user->role === 'student')
                 ? $user->enrolledClasses()->pluck('course_classes.id')
@@ -87,7 +107,7 @@ class GlobalSearch extends Component
                     'type' => 'Forum',
                     'title' => $thread->title,
                     'subtitle' => 'By: ' . $thread->user->first_name,
-                    'url' => route('courses.detail', ['id' => $thread->session->course_class_id, 'tab' => 'forum']), // Bisa ditambah anchor ke thread id nanti
+                    'url' => route('courses.detail', ['id' => $thread->session->course_class_id, 'tab' => 'forum']),
                     'icon' => 'message-circle'
                 ];
             });
