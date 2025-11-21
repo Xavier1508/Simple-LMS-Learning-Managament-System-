@@ -10,7 +10,10 @@ jobs:
   test-and-analyze:
     name: Test & Analyze (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./lms-laravel
+        
     strategy:
       fail-fast: true
       matrix:
