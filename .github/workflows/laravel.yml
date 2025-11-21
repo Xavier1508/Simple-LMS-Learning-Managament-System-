@@ -13,7 +13,7 @@ jobs:
     defaults:
       run:
         working-directory: ./lms-laravel
-        
+
     strategy:
       fail-fast: true
       matrix:
@@ -79,6 +79,19 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: lms-laravel/package-lock.json 
+
+      - name: Install & Build Frontend
+        working-directory: ./lms-laravel
+        run: |
+          npm ci
+          npm run build
+      
+      - name: NPM Security Audit
+        # INI JUGA HARUS DI DALAM FOLDER:
+        working-directory: ./lms-laravel
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Install & Build Frontend
         run: |
