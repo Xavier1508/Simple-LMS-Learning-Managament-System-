@@ -10,6 +10,12 @@ use Carbon\Carbon;
 /**
  * @property int $id
  * @property int $course_class_id
+ * @property string $title
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $due_date
+ * @property string|null $attachment_path
+ * @property string|null $attachment_name
+ * @property bool $is_lock
  * @property CourseClass $class
  * @property \Illuminate\Database\Eloquent\Collection|Submission[] $submissions
  */
@@ -25,19 +31,16 @@ class Assignment extends Model
         'is_lock' => 'boolean',
     ];
 
-    // Relasi ke CourseClass
     public function class(): BelongsTo
     {
         return $this->belongsTo(CourseClass::class, 'course_class_id');
     }
 
-    // Relasi ke Submission
     public function submissions(): HasMany
     {
         return $this->hasMany(Submission::class);
     }
 
-    // Helper: Cek apakah sudah lewat deadline
     public function isOverdue(): bool
     {
         if (!$this->due_date) {
@@ -46,7 +49,6 @@ class Assignment extends Model
         return Carbon::now()->gt($this->due_date);
     }
 
-    // Helper: Cek apakah siswa tertentu sudah mengumpulkan
     public function isSubmittedBy(int|string $userId): bool
     {
         return $this->submissions()->where('user_id', $userId)->exists();

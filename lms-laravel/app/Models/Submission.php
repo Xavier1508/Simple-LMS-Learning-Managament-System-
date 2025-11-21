@@ -3,7 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $assignment_id
+ * @property int $user_id
+ * @property string $file_path
+ * @property string $file_name
+ * @property string|null $text_content
+ * @property int|null $grade
+ * @property string|null $feedback
+ * @property \Illuminate\Support\Carbon|null $submitted_at
+ * @property string $status
+ * @property Assignment $assignment
+ * @property User $user
+ */
 class Submission extends Model
 {
     protected $fillable = [
@@ -15,12 +30,12 @@ class Submission extends Model
         'submitted_at' => 'datetime',
     ];
 
-    public function assignment()
+    public function assignment(): BelongsTo
     {
         return $this->belongsTo(Assignment::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

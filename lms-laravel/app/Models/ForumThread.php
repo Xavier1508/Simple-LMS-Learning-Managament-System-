@@ -11,6 +11,14 @@ use Carbon\Carbon;
  * @property int $id
  * @property int $course_session_id
  * @property int $user_id
+ * @property string $title
+ * @property string $content
+ * @property bool $is_hidden
+ * @property bool $is_assessment
+ * @property \Illuminate\Support\Carbon|null $deadline_at
+ * @property string|null $attachment_path
+ * @property string|null $attachment_name
+ * @property string|null $attachment_type
  * @property CourseSession $session
  * @property User $user
  * @property \Illuminate\Database\Eloquent\Collection|ForumPost[] $posts
@@ -29,25 +37,21 @@ class ForumThread extends Model
         'deadline_at' => 'datetime',
     ];
 
-    // Relasi ke User (Pembuat Thread)
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke CourseSession
     public function session(): BelongsTo
     {
         return $this->belongsTo(CourseSession::class, 'course_session_id');
     }
 
-    // Relasi ke Postingan/Balasan
     public function posts(): HasMany
     {
         return $this->hasMany(ForumPost::class);
     }
 
-    // Helper: Apakah sudah deadline?
     public function isLocked(): bool
     {
         if (!$this->is_assessment || !$this->deadline_at) {
