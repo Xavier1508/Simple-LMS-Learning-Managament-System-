@@ -13,7 +13,7 @@ Route::get('/', function () {
 // GROUP UTAMA: Hanya bisa diakses user yang sudah login & verifikasi email
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
     Route::view('profile', 'profile')->name('profile');
 
     // Livewire / Volt Managers
@@ -23,9 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('attendance', \App\Livewire\AttendanceManager::class)->name('attendance');
 
     // Standard Controllers
-    Route::get('forum', [ForumController::class, 'index'])->name('forum');
-    Route::get('assessment', [AssessmentController::class, 'index'])->name('assessment');
-    Route::get('schedule', [ScheduleController::class, 'index'])->name('schedule');
+    Route::get('forum', \App\Livewire\ForumManager::class)->name('forum');
+    Route::get('assessment', \App\Livewire\AssessmentManager::class)->name('assessment');
+    Route::get('schedule', \App\Livewire\ScheduleManager::class)->name('schedule');
 });
 
 // Include Auth Routes

@@ -16,6 +16,7 @@ use App\Livewire\Traits\Course\WithMaterials;
 use App\Livewire\Traits\Course\WithForum;
 use App\Livewire\Traits\Course\WithAssessment;
 use App\Livewire\Traits\Course\WithGradebook;
+use App\Livewire\Traits\Course\WithPeople;
 
 #[Layout('layouts.app')]
 class CourseDetail extends Component
@@ -28,44 +29,52 @@ class CourseDetail extends Component
     use WithForum;
     use WithAssessment;
     use WithGradebook;
+    use WithPeople;
 
     public $courseClassId;
     public $activeTab = 'session'; // Default tab
     public $activeSessionId = null;
 
-    public function mount($id)
+public function mount($id)
     {
         $this->courseClassId = $id;
-
-        // --- LOGIC REDIRECT DARI SIDEBAR ---
         // Menangkap parameter '?tab=' dari URL
         $reqTab = request()->query('tab');
 
-        if ($reqTab === 'attendance') {
-            $this->activeTab = 'attendance';
-        } elseif ($reqTab === 'gradebook') {
-            $this->activeTab = 'gradebook'; // <-- Fix: Menangani redirect gradebook
-        } elseif ($reqTab === 'forum') {
-            $this->activeTab = 'forum';
-        } elseif ($reqTab === 'assessment') {
-            $this->activeTab = 'assessment';
+        if ($reqTab) {
+            // Validasi agar hanya tab yang valid yang diproses
+            if (in_array($reqTab, ['session', 'attendance', 'gradebook', 'forum', 'assessment', 'people'])) {
+                $this->activeTab = $reqTab;
+            }
         }
 
-        // --- LOGIC AUTO-OPEN SESSION ---
-        // Membuka sesi yang sedang berlangsung atau yang paling dekat waktunya
+        // --- 2. LOGIC SELECT SESSION (SCHEDULE) ---
+        // Menangkap parameter '?session_id=' dari URL (Dikirim dari Kalender/Schedule)
+        $reqSession = request()->query('session_id');
+
+        // Cari session terdekat berdasarkan waktu sekarang (Default behavior)
         $now = Carbon::now();
         $closestSession = CourseSession::where('course_class_id', $id)
             ->orderByRaw("ABS(TIMESTAMPDIFF(SECOND, start_time, ?))", [$now])
             ->first();
 
-        if ($closestSession) {
+        // PENENTUAN SESSION ID (PRIORITY LEVEL)
+        if ($reqSession) {
+            // PRIORITAS 1: Jika ada request spesifik dari Jadwal/Kalender
+            $this->activeSessionId = $reqSession;
+
+            // Opsional: Jika tab tidak diset spesifik, paksa ke tab session
+            if (!$reqTab) {
+                $this->activeTab = 'session';
+            }
+        } elseif ($closestSession) {
+            // PRIORITAS 2: Session yang sedang berlangsung / terdekat waktunya
             $this->activeSessionId = $closestSession->id;
         } else {
-            // Fallback ke sesi pertama jika tidak ada yang dekat
+            // PRIORITAS 3: Fallback ke session pertama jika belum ada jadwal
             $first = CourseSession::where('course_class_id', $id)->first();
             $this->activeSessionId = $first ? $first->id : null;
         }
-
         $this->ensureGradeComponentsExist();
     }
 

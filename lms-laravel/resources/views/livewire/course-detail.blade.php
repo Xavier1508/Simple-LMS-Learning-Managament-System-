@@ -72,7 +72,10 @@
 
         @elseif($activeTab === 'gradebook')
              @include('livewire.course-detail.tabs.gradebook')
-             
+
+        @elseif($activeTab === 'people')
+            @include('livewire.course-detail.tabs.people')
+            
         {{-- OTHER TABS: Placeholder --}}
         @else
             @include('livewire.course-detail.tabs.empty')

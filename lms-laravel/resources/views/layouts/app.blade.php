@@ -7,104 +7,130 @@
 
     <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
 
+    {{-- Font Awesome & Lucide Icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
     <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
 
+    {{-- Vite Assets (Tailwind + JS) --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- Styles Stack --}}
     @stack('styles')
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-    <div class="flex h-screen">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-        <aside class="fixed top-0 left-0 h-screen w-60 bg-white border-r border-gray-200 flex flex-col p-5">
-            <a href="#" class="text-2xl font-bold mb-8">Ascend LMS</a>
-                <nav class="flex flex-col gap-3">
-                    <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('dashboard')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-chart-line w-5 text-center"></i> Dashboard
-                    </a>
+    {{-- PARENT CONTAINER: H-SCREEN & NO SCROLL ON BODY --}}
+    <div class="flex h-screen w-full overflow-hidden">
 
-                    <a href="{{ route('courses') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('courses')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-book-open w-5 text-center"></i> Courses
-                    </a>
+        {{-- 1. SIDEBAR (STATIC WIDTH, NOT FIXED) --}}
+        {{-- flex-shrink-0: Agar sidebar tidak tergencet/mengecil --}}
+        <aside class="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col h-full z-20">
 
-                    <a href="{{ route('forum') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('forum')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-comments w-5 text-center"></i> Forum
-                    </a>
-
-                    <a href="{{ route('assessment') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('assessment')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-file-pen w-5 text-center"></i> Assessment
-                    </a>
-
-                    <a href="{{ route('gradebook') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('gradebook')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-graduation-cap w-5 text-center"></i> Gradebook
-                    </a>
-
-                    <a href="{{ route('attendance') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('attendance')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-calendar-check w-5 text-center"></i> Attendance
-                    </a>
-
-                    <a href="{{ route('schedule') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded-md
-                            {{ request()->routeIs('schedule')
-                                ? 'bg-orange-500 text-white font-medium hover:text-white'
-                                : 'text-gray-600 hover:text-orange-500' }}">
-                        <i class="fa-solid fa-calendar-days w-5 text-center"></i> Schedule
-                    </a>
-                </nav>
-        </aside>
-
-        <main class="flex-1 flex flex-col ml-60 h-screen overflow-y-auto">
-            <div class="sticky top-0 z-10 flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center gap-3 w-1.2">
-                    <div class="relative w-full">
-                        <input type="text" placeholder="Search"
-                               class="w-full border border-gray-300 rounded-md pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
+            {{-- Logo Area (Fixed Height) --}}
+            <div class="p-6 flex-shrink-0">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 group">
+                    <div class="w-10 h-10 bg-gray-800 text-white rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+                        <i class="fa-solid fa-graduation-cap text-lg"></i>
                     </div>
-                </div>
-                <livewire:profile-dropdown />
+                    <div class="text-2xl font-extrabold tracking-tight">
+                        <span class="text-gray-800">Ascend</span><span class="text-orange-600">LMS</span>
+                    </div>
+                </a>
             </div>
 
-            {{ $slot }}
+            {{-- Menu Area (Scrollable independently) --}}
+            <nav class="flex-1 overflow-y-auto px-4 pb-4 space-y-1">
+                @php
+                    $menuItems = [
+                        ['route' => 'dashboard', 'icon' => 'fa-chart-line', 'label' => 'Dashboard'],
+                        ['route' => 'courses', 'icon' => 'fa-book-open', 'label' => 'Courses'],
+                        ['route' => 'forum', 'icon' => 'fa-comments', 'label' => 'Forum'],
+                        ['route' => 'assessment', 'icon' => 'fa-file-pen', 'label' => 'Assessment'],
+                        ['route' => 'gradebook', 'icon' => 'fa-medal', 'label' => 'Gradebook'],
+                        ['route' => 'attendance', 'icon' => 'fa-calendar-check', 'label' => 'Attendance'],
+                        ['route' => 'schedule', 'icon' => 'fa-calendar-days', 'label' => 'Schedule'],
+                    ];
+                @endphp
 
-        </main>
+                @foreach($menuItems as $item)
+                    <a href="{{ route($item['route']) }}"
+                       class="flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group text-[15px] font-medium
+                              {{ (request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*'))
+                                  ? 'bg-orange-500 text-white shadow-md transform scale-[1.02]'
+                                  : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600 hover:pl-6' }}">
+                        <i class="fa-solid {{ $item['icon'] }} w-5 text-center {{ (request()->routeIs($item['route']) || request()->routeIs($item['route'].'.*')) ? 'text-white' : 'text-gray-400 group-hover:text-orange-500' }}"></i>
+                        {{ $item['label'] }}
+                    </a>
+                @endforeach
+            </nav>
+
+            {{-- Profile Mini (Bottom Sticky inside Sidebar) --}}
+            <div class="p-4 border-t border-gray-100 flex-shrink-0">
+                <a href="{{ route('profile') }}" class="flex items-center gap-3 group cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm border border-orange-200">
+                            {{ substr(Auth::user()->first_name ?? 'U', 0, 1) }}{{ substr(Auth::user()->last_name ?? '', 0, 1) }}
+                        </div>
+                        <span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white bg-green-500"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-gray-800 truncate text-sm group-hover:text-orange-600 transition">
+                            {{ Auth::user()->first_name ?? 'User' }}
+                        </p>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                            <span class="text-xs text-green-600 font-medium">Active</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:text-gray-500"></i>
+                </a>
+            </div>
+        </aside>
+
+        {{-- 2. MAIN CONTENT WRAPPER --}}
+        {{-- flex-1: Ambil sisa lebar layar --}}
+        {{-- min-w-0: CRUCIAL FIX! Mencegah child grid memaksa layout melebar --}}
+        <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-gray-50 relative">
+
+            {{-- TOP HEADER (Sticky) --}}
+            <header class="sticky top-0 z-30 flex-shrink-0 bg-white border-b border-gray-200 px-8 py-4 shadow-sm flex items-center justify-between">
+                {{-- Global Search --}}
+                <div class="w-full max-w-2xl">
+                    <livewire:global-search />
+                </div>
+
+                {{-- Right Actions --}}
+                <div class="ml-6 flex items-center gap-5 flex-shrink-0">
+                    <button class="text-gray-400 hover:text-orange-500 transition relative p-1">
+                        <i class="fa-regular fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-red-500"></span>
+                    </button>
+                    <div class="h-8 w-px bg-gray-200"></div>
+                    <livewire:profile-dropdown />
+                </div>
+            </header>
+
+            {{-- SCROLLABLE CONTENT AREA --}}
+            <main class="flex-1 overflow-y-auto p-0 scroll-smooth">
+                {{ $slot }}
+            </main>
+
+        </div>
     </div>
 
+    {{-- Stack untuk Modal Livewire --}}
+    @stack('modals')
+
+    {{-- Stack untuk Script Tambahan --}}
+    @stack('scripts')
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            } else {
-                console.error('Lucide (layout) not loaded');
-            }
+        document.addEventListener('livewire:navigated', () => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     </script>
-    @stack('scripts')
 </body>
 </html>
