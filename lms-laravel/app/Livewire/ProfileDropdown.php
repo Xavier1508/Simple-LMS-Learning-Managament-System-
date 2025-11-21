@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Livewire\Actions\Logout;
+use Illuminate\View\View;
 use Livewire\Component;
 
 class ProfileDropdown extends Component
@@ -21,7 +22,7 @@ class ProfileDropdown extends Component
     /**
      * Render the component.
      */
-    public function render()
+    public function render(): View
     {
         return view('livewire.profile-dropdown');
     }

@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
+use Illuminate\View\View;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CourseClass;
@@ -10,47 +12,40 @@ use App\Models\ForumThread;
 
 class GlobalSearch extends Component
 {
-    public $query = '';
-    public $results = [];
+    public string $query = '';
+    public array $results = [];
+    public bool $showAdvancedSearch = false;
 
-    // PERBAIKAN: Menambahkan properti public agar dikenali oleh Blade
-    public $showAdvancedSearch = false;
-
-    // Reset hasil jika query berubah
-    public function updatedQuery()
+    public function updatedQuery(): void
     {
         $this->search();
     }
 
-    // PERBAIKAN: Menambahkan method untuk membuka modal
-    public function openAdvancedSearch()
+    public function openAdvancedSearch(): void
     {
         $this->showAdvancedSearch = true;
-
-        // Opsional: Jika sudah ada query, langsung jalankan search saat modal dibuka
         if (strlen($this->query) >= 2) {
             $this->search();
         }
     }
 
-    // PERBAIKAN: Menambahkan method untuk menutup modal
-    public function closeAdvancedSearch()
+    public function closeAdvancedSearch(): void
     {
         $this->showAdvancedSearch = false;
     }
 
-    public function search()
+    public function search(): void
     {
         if (strlen($this->query) < 2) {
             $this->results = [];
             return;
         }
 
+        /** @var User $user */
         $user = Auth::user();
         $searchResults = [];
 
         // 1. SEARCH COURSES
-        // Logika: Cari di kelas yang diambil (Siswa) atau diajar (Dosen)
         $courseQuery = ($user->role === 'student')
             ? $user->enrolledClasses()->with('course')
             : $user->teachingClasses()->with('course');
@@ -62,6 +57,7 @@ class GlobalSearch extends Component
             ->take(3)
             ->get()
             ->map(function ($class) {
+                /** @var CourseClass $class */
                 return [
                     'type' => 'Course',
                     'title' => $class->course->title,
@@ -72,8 +68,7 @@ class GlobalSearch extends Component
             });
 
         // 2. SEARCH ASSIGNMENTS
-        // Cari tugas yang relevan dengan user
-        $classIds = $courses->pluck('id')->toArray(); // Optimasi sederhana
+        $classIds = $courses->pluck('id')->toArray();
         if(empty($classIds)) {
              $classIds = ($user->role === 'student')
                 ? $user->enrolledClasses()->pluck('course_classes.id')
@@ -86,10 +81,11 @@ class GlobalSearch extends Component
             ->take(3)
             ->get()
             ->map(function ($task) {
+                /** @var Assignment $task */
                 return [
                     'type' => 'Assessment',
                     'title' => $task->title,
-                    'subtitle' => 'Due: ' . $task->due_date->format('d M'),
+                    'subtitle' => $task->due_date ? 'Due: ' . $task->due_date->format('d M') : 'No Due Date',
                     'url' => route('courses.detail', ['id' => $task->course_class_id, 'tab' => 'assessment']),
                     'icon' => 'clipboard'
                 ];
@@ -103,6 +99,7 @@ class GlobalSearch extends Component
             ->take(3)
             ->get()
             ->map(function ($thread) {
+                /** @var ForumThread $thread */
                 return [
                     'type' => 'Forum',
                     'title' => $thread->title,
@@ -120,7 +117,7 @@ class GlobalSearch extends Component
         $this->results = $searchResults;
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.global-search');
     }

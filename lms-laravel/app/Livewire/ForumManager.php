@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,15 +15,16 @@ class ForumManager extends Component
 {
     use WithPagination;
 
-    public $filter = 'all'; // 'all', 'my_courses'
+    public string $filter = 'all'; // 'all', 'my_courses'
 
-    public function setFilter($filter)
+    public function setFilter(string $filter): void
     {
         $this->filter = $filter;
     }
 
-    public function render()
+    public function render(): View
     {
+        /** @var User $user */
         $user = Auth::user();
 
         // 1. Ambil ID kelas dimana user terdaftar (Siswa) atau mengajar (Dosen)

@@ -5,16 +5,19 @@ namespace App\Livewire;
 use App\Models\Attendance;
 use App\Models\CourseClass;
 use App\Models\CourseSession;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class AttendanceManager extends Component
 {
-    public function render()
+    public function render(): View
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if ($user->role === 'student') {
@@ -25,7 +28,7 @@ class AttendanceManager extends Component
     }
 
     // --- LOGIC VIEW MAHASISWA ---
-    private function renderStudentView($user)
+    private function renderStudentView(User $user): View
     {
         // 1. Ambil semua kelas yang diambil mahasiswa
         $enrolledClasses = $user->enrolledClasses()->with(['course', 'sessions.attendances'])->get();
@@ -36,6 +39,7 @@ class AttendanceManager extends Component
         $totalAttended = 0;
 
         foreach ($enrolledClasses as $class) {
+            /** @var CourseClass $class */
             $totalSessions += $class->sessions->count();
             // Hitung kehadiran valid (present) di semua sesi
             $totalAttended += $class->sessions->flatMap->attendances
@@ -44,13 +48,13 @@ class AttendanceManager extends Component
                 ->count();
         }
 
-        $totalLateAbsent = $totalSessions - $totalAttended; // Sederhana: Total - Hadir
+        $totalLateAbsent = $totalSessions - $totalAttended;
 
         // Rate Calculation
         $attendanceRate = $totalSessions > 0 ? ($totalAttended / $totalSessions) * 100 : 0;
         $attendanceRate = round($attendanceRate, 1);
 
-        // 3. Logic Status Passing Grade (Smart Logic)
+        // 3. Logic Status Passing Grade
         $rateStatus = [
             'color' => 'black',
             'text' => 'Drop Out / Failed',
@@ -66,17 +70,18 @@ class AttendanceManager extends Component
         }
 
         // 4. Detailed Log Data
-        // Mengambil semua sesi yang sudah berlalu atau sedang berlangsung dari kelas yang diambil
         $logs = CourseSession::whereIn('course_class_id', $enrolledClasses->pluck('id'))
             ->with(['class.course', 'attendances'])
-            ->where('start_time', '<=', Carbon::now()) // Hanya tampilkan yang sudah mulai
+            ->where('start_time', '<=', Carbon::now())
             ->orderBy('start_time', 'desc')
             ->get()
             ->map(function ($session) use ($user) {
+                /** @var CourseSession $session */
+                /** @var Attendance|null $attendance */
                 $attendance = $session->attendances->where('user_id', $user->id)->first();
 
                 $status = 'Absent';
-                $remark = 'Late Attendance'; // Default kalau tidak ada record
+                $remark = 'Late Attendance';
                 $cssClass = 'text-red-600 bg-red-50 border-red-200';
 
                 if ($attendance && $attendance->status === 'present') {
@@ -86,9 +91,9 @@ class AttendanceManager extends Component
                 }
 
                 return (object) [
-                    'date' => $session->start_time->format('d M Y'),
-                    'start_time' => $session->start_time->format('H:i'),
-                    'end_time' => $session->end_time->format('H:i'),
+                    'date' => $session->start_time ? $session->start_time->format('d M Y') : '-',
+                    'start_time' => $session->start_time ? $session->start_time->format('H:i') : '-',
+                    'end_time' => $session->end_time ? $session->end_time->format('H:i') : '-',
                     'course_code' => $session->class->course->code,
                     'class_code' => $session->class->class_code . ' - ' . $session->class->type,
                     'status' => $status,
@@ -106,7 +111,7 @@ class AttendanceManager extends Component
     }
 
     // --- LOGIC VIEW DOSEN ---
-    private function renderLecturerView($user)
+    private function renderLecturerView(User $user): View
     {
         // 1. Ambil kelas yang diajar
         $teachingClasses = $user->teachingClasses()->with(['course', 'sessions.attendances', 'students'])->get();
@@ -116,38 +121,38 @@ class AttendanceManager extends Component
         $totalSessionsToTeach = 0;
 
         foreach ($teachingClasses as $class) {
+            /** @var CourseClass $class */
             $totalSessionsToTeach += $class->sessions->count();
         }
 
-        // 3. Detailed Log Data (Session Monitor)
+        // 3. Detailed Log Data
         $logs = CourseSession::whereIn('course_class_id', $teachingClasses->pluck('id'))
-            ->with(['class.course']) // <--- TAMBAHKAN INI (Eager Loading)
+            ->with(['class.course'])
             ->where('start_time', '<=', Carbon::now())
             ->orderBy('start_time', 'desc')
             ->get()
             ->map(function ($session) {
+                /** @var CourseSession $session */
                 $now = Carbon::now();
 
-                // Logic Status Kelas (Start/On Going/Finish)
                 $status = '';
                 $cssClass = '';
 
-                if ($now->gt($session->end_time)) {
+                if ($session->end_time && $now->gt($session->end_time)) {
                     $status = 'Class Finish';
                     $cssClass = 'text-red-600 bg-red-50 border-red-200';
-                } elseif ($now->gte($session->start_time) && $now->lte($session->end_time)) {
+                } elseif ($session->start_time && $session->end_time && $now->gte($session->start_time) && $now->lte($session->end_time)) {
                     $status = 'Class On Going';
                     $cssClass = 'text-yellow-600 bg-yellow-50 border-yellow-200';
                 } else {
-                    // Fallback logic jika baru mulai banget
                     $status = 'Class Start';
                     $cssClass = 'text-green-600 bg-green-50 border-green-200';
                 }
 
                 return (object) [
-                    'date' => $session->start_time->format('d M Y'),
-                    'start_time' => $session->start_time->format('H:i'),
-                    'end_time' => $session->end_time->format('H:i'),
+                    'date' => $session->start_time ? $session->start_time->format('d M Y') : '-',
+                    'start_time' => $session->start_time ? $session->start_time->format('H:i') : '-',
+                    'end_time' => $session->end_time ? $session->end_time->format('H:i') : '-',
                     'course_code' => $session->class->course->code,
                     'class_code' => $session->class->class_code . ' - ' . $session->class->type,
                     'status' => $status,

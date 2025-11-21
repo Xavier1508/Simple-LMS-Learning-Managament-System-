@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
@@ -10,12 +12,14 @@ use App\Models\Assignment;
 use App\Models\CourseSession;
 use App\Models\GradeComponent;
 use App\Models\StudentGrade;
+use App\Models\CourseClass;
 
 #[Layout('layouts.app')]
 class Dashboard extends Component
 {
-    public function render()
+    public function render(): View
     {
+        /** @var User $user */
         $user = Auth::user();
         $today = Carbon::today();
         $now = Carbon::now();
@@ -38,7 +42,10 @@ class Dashboard extends Component
         ], $data));
     }
 
-    private function getStudentData($user, $today, $now)
+    /**
+     * @return array<string, mixed>
+     */
+    private function getStudentData(User $user, Carbon $today, Carbon $now): array
     {
         $enrolledClasses = $user->enrolledClasses()->with('course')->get();
         $classIds = $enrolledClasses->pluck('id');
@@ -46,18 +53,30 @@ class Dashboard extends Component
         // 1. Calculate GPA
         $totalSKS = 0;
         $totalPoints = 0;
+
         foreach ($enrolledClasses as $class) {
-            $sks = $class->course->credits ?? 3;
+            /** @var CourseClass $class */
+            $sks = $class->course->credits ?? 3; // Asumsi default 3 SKS
             $components = GradeComponent::where('course_id', $class->course_id)->get();
             $score = 0;
+
             foreach ($components as $comp) {
-                $grade = StudentGrade::where('grade_component_id', $comp->id)->where('user_id', $user->id)->first();
-                if ($grade) $score += ($grade->score * ($comp->weight / 100));
+                /** @var GradeComponent $comp */
+                /** @var StudentGrade|null $grade */
+                $grade = StudentGrade::where('grade_component_id', $comp->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($grade) {
+                    $score += ($grade->score * ($comp->weight / 100));
+                }
             }
+
             $gp = $score >= 85 ? 4.0 : ($score >= 75 ? 3.0 : ($score >= 65 ? 2.0 : 1.0));
             $totalSKS += $sks;
             $totalPoints += ($gp * $sks);
         }
+
         $gpa = $totalSKS > 0 ? round($totalPoints / $totalSKS, 2) : 0.00;
 
         // 2. Upcoming Tasks
@@ -82,11 +101,14 @@ class Dashboard extends Component
             'active_courses' => $enrolledClasses->count(),
             'pending_tasks_count' => Assignment::whereIn('course_class_id', $classIds)->where('due_date', '>', $now)->count(),
             'upcoming_tasks' => $upcomingTasks,
-            'todaysClasses' => $todaysClasses // <--- PERBAIKAN: Ganti jadi camelCase
+            'todaysClasses' => $todaysClasses
         ];
     }
 
-    private function getLecturerData($user, $today)
+    /**
+     * @return array<string, mixed>
+     */
+    private function getLecturerData(User $user, Carbon $today): array
     {
         $teachingClasses = $user->teachingClasses()->with('course')->get();
         $classIds = $teachingClasses->pluck('id');
@@ -94,6 +116,7 @@ class Dashboard extends Component
         // 1. Total Students
         $totalStudents = 0;
         foreach($teachingClasses as $class) {
+            /** @var CourseClass $class */
             $totalStudents += $class->students()->count();
         }
 
@@ -115,20 +138,23 @@ class Dashboard extends Component
             'role' => 'lecturer',
             'total_students' => $totalStudents,
             'active_classes' => $teachingClasses->count(),
-            'todaysClasses' => $todaysClasses, // <--- PERBAIKAN: Ganti jadi camelCase
+            'todaysClasses' => $todaysClasses,
             'tasks_to_grade' => $tasksToGrade
         ];
     }
 
-    private function getGreeting()
+    private function getGreeting(): string
     {
-        $hour = date('H');
+        $hour = (int) date('H');
         if ($hour < 12) return 'Good Morning';
         if ($hour < 18) return 'Good Afternoon';
         return 'Good Evening';
     }
 
-    private function getDummyAnnouncements()
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function getDummyAnnouncements(): array
     {
         return [
             [

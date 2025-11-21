@@ -2,6 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\CourseClass;
+use App\Models\CourseSession;
+use App\Models\User;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
@@ -11,16 +15,16 @@ use Carbon\Carbon;
 class ScheduleManager extends Component
 {
     // State untuk Filter Harian
-    public $viewDate; // Tanggal yang sedang dilihat (Y-m-d)
-    public $viewLabel = 'Today'; // 'Yesterday', 'Today', 'Tomorrow'
+    public string $viewDate = ''; // Tanggal yang sedang dilihat (Y-m-d)
+    public string $viewLabel = 'Today'; // 'Yesterday', 'Today', 'Tomorrow'
 
-    public function mount()
+    public function mount(): void
     {
         // Default start hari ini
         $this->viewDate = Carbon::today()->format('Y-m-d');
     }
 
-    public function setDay($type)
+    public function setDay(string $type): void
     {
         $today = Carbon::today();
 
@@ -47,8 +51,9 @@ class ScheduleManager extends Component
         }
     }
 
-    public function render()
+    public function render(): View
     {
+        /** @var User $user */
         $user = Auth::user();
 
         // --- 1. DATA FETCHING ---
@@ -61,11 +66,15 @@ class ScheduleManager extends Component
 
         // --- 2. PROCESSING LOOP ---
         foreach ($classes as $class) {
+            /** @var CourseClass $class */ // <-- INI KUNCI PERBAIKAN PHPSTAN
+
             // Generate Warna Unik Konsisten (Hash dari Kode Kelas + Course)
             $identifier = $class->course->code . $class->class_code;
             $baseColor = $this->stringToColorCode($identifier);
 
             foreach ($class->sessions as $session) {
+                /** @var CourseSession $session */ // <-- INI JUGA PENTING
+
                 $start = Carbon::parse($session->start_time);
                 $end = Carbon::parse($session->end_time);
                 $now = Carbon::now();
@@ -93,7 +102,6 @@ class ScheduleManager extends Component
                 ];
 
                 // B. Data untuk Daily Activities (Card Bawah)
-                // Filter: Apakah sesi ini terjadi pada tanggal yang sedang dipilih ($this->viewDate)?
                 if ($start->format('Y-m-d') === $this->viewDate) {
                     $dailyActivities[] = (object) [
                         'id' => $session->id,
@@ -106,7 +114,7 @@ class ScheduleManager extends Component
                         'start_time' => $start,
                         'end_time' => $end,
                         'delivery_mode' => $session->delivery_mode,
-                        'color' => $baseColor, // Warna sama persis dengan kalender
+                        'color' => $baseColor,
                         'is_past' => $isPast,
                         'lecturer_name' => $class->lecturer->first_name . ' ' . $class->lecturer->last_name
                     ];
@@ -125,7 +133,8 @@ class ScheduleManager extends Component
     }
 
     // Helper Warna Konsisten
-    private function stringToColorCode($str) {
+    private function stringToColorCode(string $str): string
+    {
         $code = dechex(crc32($str));
         $code = substr($code, 0, 6);
         return "#" . $code;

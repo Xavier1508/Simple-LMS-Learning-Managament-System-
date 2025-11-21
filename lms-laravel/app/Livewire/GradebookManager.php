@@ -2,17 +2,21 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
+use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use App\Models\GradeComponent;
 use App\Models\StudentGrade;
+use App\Models\CourseClass;
 
 #[Layout('layouts.app')]
 class GradebookManager extends Component
 {
-    public function render()
+    public function render(): View
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if ($user->role === 'student') {
@@ -22,7 +26,7 @@ class GradebookManager extends Component
         }
     }
 
-    private function renderStudentDashboard($user)
+    private function renderStudentDashboard(User $user): View
     {
         // Ambil semua kelas, Eager load Course
         $enrolledClasses = $user->enrolledClasses()->with('course')->get();
@@ -38,18 +42,25 @@ class GradebookManager extends Component
         $processedCourses = [];
 
         foreach ($groupedCourses as $courseId => $classes) {
-            // Ambil data course dari salah satu kelas (sama saja)
-            $courseRef = $classes->first()->course;
+            /** @var \Illuminate\Database\Eloquent\Collection<int, CourseClass> $classes */
+
+            // Ambil data course dari salah satu kelas
+            /** @var CourseClass $firstClass */
+            $firstClass = $classes->first();
+            /** @var \App\Models\Course $courseRef */
+            $courseRef = $firstClass->course;
 
             // Hitung Nilai Total (Gabungan Komponen LEC & LAB)
-            // Kita cari semua komponen penilaian milik Course ID ini
             $components = GradeComponent::where('course_id', $courseId)->get();
             $courseScore = 0;
 
             foreach ($components as $comp) {
+                /** @var GradeComponent $comp */
+                /** @var StudentGrade|null $grade */
                 $grade = StudentGrade::where('grade_component_id', $comp->id)
                     ->where('user_id', $user->id)
                     ->first();
+
                 if ($grade) {
                     $courseScore += ($grade->score * ($comp->weight / 100));
                 }
@@ -68,9 +79,8 @@ class GradebookManager extends Component
             elseif ($courseScore >= 65) { $gradePoint = 2.0; $gradeLetter = 'C'; }
             elseif ($courseScore >= 50) { $gradePoint = 1.0; $gradeLetter = 'D'; }
 
-            $sks = $courseRef->credits ?? 0;
+            $sks = $courseRef->credits ?? 0; // Asumsi ada kolom credits, default 0
 
-            // Hanya hitung ke GPA jika SKS > 0
             if($sks > 0) {
                 $totalSKS += $sks;
                 $totalQualityPoints += ($gradePoint * $sks);
@@ -78,16 +88,15 @@ class GradebookManager extends Component
 
             $totalScoreSum += $courseScore;
 
-            // Siapkan data untuk View (Ambil kelas pertama sbg link representatif)
             $processedCourses[] = (object) [
-                'id' => $classes->first()->id, // Link ke salah satu kelas detail
+                'id' => $firstClass->id,
                 'title' => $courseRef->title,
                 'code' => $courseRef->code,
-                'class_code' => $classes->pluck('class_code')->implode(' / '), // LA01 / LB01
-                'type' => $classes->pluck('type')->implode(' & '), // LEC & LAB
+                'class_code' => $classes->pluck('class_code')->implode(' / '),
+                'type' => $classes->pluck('type')->implode(' & '),
                 'score' => $courseScore,
                 'grade_letter' => $gradeLetter,
-                'semester' => $classes->first()->semester
+                'semester' => $firstClass->semester
             ];
         }
 
@@ -112,7 +121,7 @@ class GradebookManager extends Component
         ]);
     }
 
-    private function renderLecturerDashboard($user)
+    private function renderLecturerDashboard(User $user): View
     {
         $teachingClasses = $user->teachingClasses()->with('course')->get();
         $totalCourses = $teachingClasses->count();
