@@ -7,6 +7,33 @@ Route::get('/', function () {
     return view('landing');
 })->name('landing');
 
+// ====== SWAGGER / API DOCS ROUTES (FIX 404 JSON) ======
+Route::get('api/documentation/api-docs.json', function () {
+    $file = storage_path('api-docs/api-docs.json');
+
+    if (!file_exists($file)) {
+        return response()->json(['error' => 'Swagger JSON not found'], 404);
+    }
+
+    return response()->file($file, [
+        'Content-Type' => 'application/json',
+    ]);
+});
+
+Route::get('api/documentation/api-docs.yaml', function () {
+    $file = storage_path('api-docs/api-docs.yaml');
+
+    if (!file_exists($file)) {
+        return response()->json(['error' => 'Swagger YAML not found'], 404);
+    }
+
+    return response()->file($file, [
+        'Content-Type' => 'text/yaml',
+    ]);
+});
+// =======================================================
+
+
 // GROUP UTAMA: Hanya bisa diakses user yang sudah login & verifikasi email
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -36,6 +63,7 @@ Route::middleware('guest')->group(function () {
     \Livewire\Volt\Volt::route('login/lecturer', 'pages.auth.login-lecturer')->name('login.lecturer');
 });
 
+// FIX CLASS SESSIONS
 Route::get('/fix-sessions', function () {
     $classes = \App\Models\CourseClass::with('sessions')->get();
 
