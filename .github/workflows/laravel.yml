@@ -10,6 +10,8 @@ jobs:
   test-and-analyze:
     name: Test & Analyze (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
     defaults:
       run:
         working-directory: ./lms-laravel
@@ -39,31 +41,32 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. Setup PHP
+      # 1. Setup PHP dengan extensions lengkap
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
           coverage: pcov
+          tools: composer:v2
 
       # 2. Validasi Composer
       - name: Validate composer.json
         run: composer validate --strict
 
-      # 3. Cache Composer
+      # 3. UPGRADE: Cache Composer v3 → v4 (CRITICAL!)
       - name: Cache Composer packages
         id: composer-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          path: ./lms-laravel/vendor
+          key: ${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-
+            ${{ runner.os }}-php-${{ matrix.php }}-composer-
 
       # 4. Install Dependencies Backend
       - name: Install Dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress --no-interaction --no-suggest
 
       # 5. Setup Environment
       - name: Copy .env
@@ -73,7 +76,7 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
-      # 7. Setup Frontend & Security Check JS
+      # 7. Setup Frontend (Node.js)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -81,44 +84,33 @@ jobs:
           cache: 'npm'
           cache-dependency-path: lms-laravel/package-lock.json 
 
-      - name: Install & Build Frontend
-        working-directory: ./lms-laravel
+      # PERBAIKAN: Hilangkan duplikasi - hanya satu Install & Build Frontend
+      - name: Install & Build Frontend Assets
         run: |
           npm ci
           npm run build
       
-      - name: NPM Security Audit
-        # INI JUGA HARUS DI DALAM FOLDER:
-        working-directory: ./lms-laravel
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-      - name: Install & Build Frontend
-        run: |
-          npm ci
-          npm run build
-      
-      # TAMBAHAN: Cek keamanan library JS
+      # 8. NPM Security Audit
       - name: NPM Security Audit
         run: npm audit --audit-level=high
-        continue-on-error: true # Set false jika ingin strict banget
+        continue-on-error: true # Set false jika ingin strict
 
-      # 8. Static Analysis (PHPStan)
+      # 9. Static Analysis (PHPStan)
       - name: Run PHPStan (Static Analysis)
         run: ./vendor/bin/phpstan analyse --memory-limit=2G
         continue-on-error: false
 
-      # 9. Code Style (Pint)
+      # 10. Code Style (Pint)
       - name: Run Laravel Pint (Code Style)
         run: ./vendor/bin/pint --test
         continue-on-error: false
 
-      # 10. Security Audit Backend (DIPERKETAT)
+      # 11. Security Audit Backend (STRICT MODE)
       - name: Composer Security Audit
         run: composer audit
-        continue-on-error: false # UBAH KE FALSE: Build harus gagal jika ada library backend yang bolong!
+        continue-on-error: false # Build GAGAL jika ada vulnerability!
 
-      # 11. Run Migrations & Tests
+      # 12. Run Migrations & Tests dengan Coverage
       - name: Execute Tests (Pest/PHPUnit)
         env:
           DB_CONNECTION: mysql
@@ -129,4 +121,13 @@ jobs:
           DB_PASSWORD: ''
         run: |
           php artisan migrate --force
-          php artisan test --parallel --coverage-text
+          php artisan test --parallel --coverage-text --min=80
+
+      # 13. TAMBAHAN: Upload coverage report (opsional)
+      - name: Upload Coverage Report
+        if: matrix.php == '8.3'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./lms-laravel/coverage
+          retention-days: 7
