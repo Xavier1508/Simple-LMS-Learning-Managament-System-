@@ -18,30 +18,26 @@ jobs:
     name: SOOS DAST Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 60
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run SOOS DAST Analysis
-        uses: soos-io/soos-dast-github-action@v2
+      - name: Run SOOS DAST Scan
+        uses: soos-io/soos-dast-github-action@3e71b27756f4ed77d7ad3c0ad92afddb47a40e4d
         with:
           client_id: ${{ secrets.SOOS_CLIENT_ID }}
           api_key: ${{ secrets.SOOS_API_KEY }}
-          project_name: "LMS-Laravel-Pentest"
+          project_name: ${{ github.repository }}
           scan_mode: "baseline"
           target_url: ${{ secrets.RAILWAY_APP_URL }}
+          output_format: "sarif"
 
-          # WAJIB supaya SARIF dibuat!
-          output_format: "json"
-          output_directory: "./soos-output"
-          output_file_name: "dast.json"
-
-      - name: Upload SOOS DAST Report to Security Tab
+      - name: Upload SOOS DAST SARIF Report
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: soos-output/results.sarif
+          sarif_file: results.sarif
           category: soos-dast-scan
 
       - name: Upload DAST Report Artifact
@@ -49,5 +45,5 @@ jobs:
         if: always()
         with:
           name: soos-dast-report
-          path: soos-output/dast.json
+          path: results.sarif
           retention-days: 30
