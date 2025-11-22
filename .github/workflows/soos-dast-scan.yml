@@ -32,9 +32,10 @@ jobs:
           scan_mode: "baseline"
           target_url: ${{ secrets.RAILWAY_APP_URL }}
 
-          output_format: "sarif"
+          # WAJIB supaya SARIF dibuat!
+          output_format: "json"
           output_directory: "./soos-output"
-          output_file_name: "results.sarif"
+          output_file_name: "dast.json"
 
       - name: Upload SOOS DAST Report to Security Tab
         uses: github/codeql-action/upload-sarif@v4
@@ -48,5 +49,5 @@ jobs:
         if: always()
         with:
           name: soos-dast-report
-          path: soos-output/results.sarif
+          path: soos-output/dast.json
           retention-days: 30
