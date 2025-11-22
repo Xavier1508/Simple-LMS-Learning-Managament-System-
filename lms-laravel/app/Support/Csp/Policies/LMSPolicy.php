@@ -15,27 +15,31 @@ class LMSPolicy extends Basic
             ->addDirective(Directive::CONNECT, [Keyword::SELF])
             ->addDirective(Directive::DEFAULT, Keyword::SELF)
             ->addDirective(Directive::FORM_ACTION, Keyword::SELF)
-            ->addDirective(Directive::IMG, [Keyword::SELF, 'data:', 'https://placehold.co']) // Izinkan gambar placeholder
+            ->addDirective(Directive::IMG, [
+                Keyword::SELF,
+                'data:',
+                'https://placehold.co',
+            ])
             ->addDirective(Directive::MEDIA, Keyword::SELF)
             ->addDirective(Directive::OBJECT, Keyword::NONE)
             ->addDirective(Directive::SCRIPT, [
                 Keyword::SELF,
-                Keyword::UNSAFE_INLINE, // Wajib untuk Livewire/AlpineJS v3 tanpa nonce
-                Keyword::UNSAFE_EVAL,   // Kadang dibutuhkan AlpineJS
-                'https://cdn.jsdelivr.net', // Untuk Lucide Icons / FontAwesome CDN
-                'https://cdnjs.cloudflare.com'
+                Keyword::UNSAFE_INLINE,
+                Keyword::UNSAFE_EVAL,
+                'https://cdn.jsdelivr.net',
+                'https://cdnjs.cloudflare.com', 
             ])
             ->addDirective(Directive::STYLE, [
                 Keyword::SELF,
-                Keyword::UNSAFE_INLINE, // Wajib untuk style yang di-inject Livewire
-                'https://cdnjs.cloudflare.com', // FontAwesome CSS
-                'https://fonts.googleapis.com'  // Google Fonts
+                Keyword::UNSAFE_INLINE,
+                'https://cdnjs.cloudflare.com',
+                'https://fonts.googleapis.com', 
             ])
             ->addDirective(Directive::FONT, [
                 Keyword::SELF,
                 'https://cdnjs.cloudflare.com',
                 'https://fonts.gstatic.com',
-                'data:'
+                'data:', 
             ]);
     }
 }

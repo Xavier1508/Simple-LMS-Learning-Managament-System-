@@ -41,7 +41,6 @@ abstract class Controller
      */
     public function checkStatus()
     {
-        // Ini hanya dummy method agar Swagger tidak error "PathItem not found"
         return response()->json(['status' => 'OK', 'timestamp' => now()]);
     }
 }

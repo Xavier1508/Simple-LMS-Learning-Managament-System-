@@ -36,7 +36,7 @@ jobs:
           
           # Output configuration
           export_format: "Sarif"
-          export_file_type: "Json"
+          
           
       # UPGRADE: CodeQL Action v3 → v4
       - name: Upload SOOS DAST Report to Security Tab
