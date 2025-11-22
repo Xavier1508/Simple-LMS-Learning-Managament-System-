@@ -1,4 +1,4 @@
-name: "🛡️ Microsoft Defender & API Security"
+name: "Microsoft Defender & API Security"
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '30 2 * * 6' # Tiap Sabtu jam 2 pagi
+    - cron: '30 2 * * 6'
 
 permissions:
   contents: read
@@ -14,7 +14,6 @@ permissions:
   actions: read
 
 jobs:
-  # JOB 1: Microsoft Defender for DevOps (Static Analysis)
   msdo-analysis:
     name: Microsoft Defender (Static)
     runs-on: windows-latest
@@ -23,21 +22,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Setup Dotnet (Required for MSDO)
+      - name: Setup Dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x # Upgrade ke .NET 8 (LTS)
+          dotnet-version: 8.0.x
 
       - name: Run Microsoft Security DevOps
         uses: microsoft/security-devops-action@v1
         id: msdo
         with:
-          # Kategori scan diperluas untuk cover Secrets & IaC
           categories: 'secrets,iac,code'
-          # CATATAN: 'publish-logs' adalah parameter Azure DevOps, BUKAN GitHub Actions
-          # Parameter ini DIHAPUS karena tidak tersedia di GitHub Actions
 
-      # UPGRADE: CodeQL Action v3 → v4
       - name: Upload results to Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -45,9 +40,8 @@ jobs:
           sarif_file: ${{ steps.msdo.outputs.sarifFile }}
           category: microsoft-defender
 
-  # JOB 2: EthicalCheck (API DAST Scan)
   api-security-scan:
-    name: EthicalCheck API Scan
+    name: APIsec Cloud Scan
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: msdo-analysis
@@ -56,19 +50,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # FIXED: Gunakan commit SHA yang benar dari release v1.0.6
-      # Source: https://github.com/apisec-inc/ethicalcheck-action/releases/tag/v1.0.6
-      - name: EthicalCheck Free & Automated API Security Testing
-        uses: apisec-inc/ethicalcheck-action@v1
+      - name: APIsec Security Scan
+        uses: apisec-inc/apisec-run-scan@v1.0.8
         with:
-          oas-url: ${{ secrets.API_SWAGGER_URL }}
-          email: ${{ secrets.USER_EMAIL }}
-          sarif-result-file: "ethicalcheck-results.sarif"
+          apisec-username: ${{ secrets.APISEC_USERNAME }}
+          apisec-password: ${{ secrets.APISEC_PASSWORD }}
+          apisec-project: ${{ secrets.APISEC_PROJECT_NAME }}
+          sarif-result-file: "apisec-results.sarif"
 
-      # UPGRADE: CodeQL Action v3 → v4
-      - name: Upload API Scan results
+      - name: Upload APIsec SARIF Report
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: ./ethicalcheck-results.sarif
+          sarif_file: ./apisec-results.sarif
           category: api-security

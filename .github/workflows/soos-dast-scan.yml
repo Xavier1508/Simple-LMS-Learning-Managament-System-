@@ -31,20 +31,3 @@ jobs:
           project_name: ${{ github.repository }}
           scan_mode: "baseline"
           target_url: ${{ secrets.RAILWAY_APP_URL }}
-          export_format: "Sarif"
-          export_file_type: "Json"
-
-      - name: Upload SOOS DAST Report to Security Tab
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: results.sarif
-          category: soos-dast-scan
-
-      - name: Upload DAST Report Artifact
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: soos-dast-report
-          path: results.sarif
-          retention-days: 30
