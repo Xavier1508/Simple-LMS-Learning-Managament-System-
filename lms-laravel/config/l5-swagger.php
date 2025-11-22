@@ -98,7 +98,11 @@ return [
              * @deprecated Please use `scanOptions.exclude`
              * `scanOptions.exclude` overwrites this
              */
+            'docs_json' => 'api-docs.json',
+            'docs_yaml' => 'api-docs.yaml',
+            
             'excludes' => [],
+
         ],
 
         'scanOptions' => [

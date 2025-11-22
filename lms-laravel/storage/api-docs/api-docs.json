@@ -4,7 +4,8 @@
         "title": "Ascend LMS API Documentation",
         "description": "Dokumentasi API Lengkap untuk Ascend LMS - Project Secure Programming.",
         "contact": {
-            "email": "admin@ascendlms.com"
+            "name": "Ascend LMS Support",
+            "email": "ascendlms.learning@gmail.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -15,7 +16,11 @@
     "servers": [
         {
             "url": "http://localhost",
-            "description": "API Server"
+            "description": "Primary API Server (Railway Deployment)"
+        },
+        {
+            "url": "http://localhost:8000",
+            "description": "Local Development Server"
         }
     ],
     "paths": {
@@ -37,6 +42,14 @@
                                         "status": {
                                             "type": "string",
                                             "example": "OK"
+                                        },
+                                        "environment": {
+                                            "type": "string",
+                                            "example": "production"
+                                        },
+                                        "app_url": {
+                                            "type": "string",
+                                            "example": "https://determined-truth-production-fd42.up.railway.app"
                                         },
                                         "timestamp": {
                                             "type": "string",
