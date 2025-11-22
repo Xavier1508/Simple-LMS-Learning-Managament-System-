@@ -28,7 +28,6 @@ namespace App\Http\Controllers;
  *     url=L5_SWAGGER_CONST_HOST,
  *     description="Primary API Server (Railway Deployment)"
  * )
- *
  * @OA\Server(
  *     url="http://localhost:8000",
  *     description="Local Development Server"
@@ -46,7 +45,9 @@ abstract class Controller
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="status", type="string", example="OK"),
      *             @OA\Property(property="environment", type="string", example="production"),
      *             @OA\Property(property="app_url", type="string", example="https://determined-truth-production-fd42.up.railway.app"),

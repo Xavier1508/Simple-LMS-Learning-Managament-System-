@@ -11,7 +11,7 @@ Route::get('/', function () {
 Route::get('api/documentation/api-docs.json', function () {
     $file = storage_path('api-docs/api-docs.json');
 
-    if (!file_exists($file)) {
+    if (! file_exists($file)) {
         return response()->json(['error' => 'Swagger JSON not found'], 404);
     }
 
@@ -23,7 +23,7 @@ Route::get('api/documentation/api-docs.json', function () {
 Route::get('api/documentation/api-docs.yaml', function () {
     $file = storage_path('api-docs/api-docs.yaml');
 
-    if (!file_exists($file)) {
+    if (! file_exists($file)) {
         return response()->json(['error' => 'Swagger YAML not found'], 404);
     }
 
@@ -32,7 +32,6 @@ Route::get('api/documentation/api-docs.yaml', function () {
     ]);
 });
 // =======================================================
-
 
 // GROUP UTAMA: Hanya bisa diakses user yang sudah login & verifikasi email
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -100,7 +100,7 @@ return [
              */
             'docs_json' => 'api-docs.json',
             'docs_yaml' => 'api-docs.yaml',
-            
+
             'excludes' => [],
 
         ],

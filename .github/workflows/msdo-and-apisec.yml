@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: APIsec Security Scan
-        uses: apisec-inc/apisec-run-scan@v1.0.8
+        uses: apisec-inc/apisec-run-scan@v1.0.6
         with:
           apisec-username: ${{ secrets.APISEC_USERNAME }}
           apisec-password: ${{ secrets.APISEC_PASSWORD }}
