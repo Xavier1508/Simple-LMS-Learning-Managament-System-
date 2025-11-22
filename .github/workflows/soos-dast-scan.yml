@@ -5,9 +5,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  # TAMBAHAN: Schedule untuk weekly scan
   schedule:
-    - cron: '0 4 * * 0' # Setiap Minggu jam 4 pagi
+    - cron: '0 4 * * 0'
 
 permissions:
   contents: read
@@ -24,29 +23,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # UPGRADE: Gunakan versi terbaru v2
       - name: Run SOOS DAST Analysis
         uses: soos-io/soos-dast-github-action@v2
         with:
           client_id: ${{ secrets.SOOS_CLIENT_ID }}
           api_key: ${{ secrets.SOOS_API_KEY }}
-          project_name: "LMS-Laravel-Pentest"
-          scan_mode: "baseline" # baseline/full
+          project_name: ${{ github.repository }}
+          scan_mode: "baseline"
           target_url: ${{ secrets.RAILWAY_APP_URL }}
-          
-          # Output configuration
           output_format: "sarif"
-          
-          
-      # UPGRADE: CodeQL Action v3 → v4
+
       - name: Upload SOOS DAST Report to Security Tab
         uses: github/codeql-action/upload-sarif@v4
-        if: always() # Tetap upload meski scan gagal
+        if: always()
         with:
           sarif_file: results.sarif
           category: soos-dast-scan
 
-      # TAMBAHAN: Upload artifact untuk review manual
       - name: Upload DAST Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
