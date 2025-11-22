@@ -23,17 +23,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run SOOS DAST Scan
-        uses: soos-io/soos-dast-github-action@3e71b27756f4ed77d7ad3c0ad92afddb47a40e4d
+      - name: Run SOOS DAST Analysis
+        uses: soos-io/soos-dast-github-action@v2
         with:
           client_id: ${{ secrets.SOOS_CLIENT_ID }}
           api_key: ${{ secrets.SOOS_API_KEY }}
           project_name: ${{ github.repository }}
           scan_mode: "baseline"
           target_url: ${{ secrets.RAILWAY_APP_URL }}
-          output_format: "sarif"
+          export_format: "Sarif"
+          export_file_type: "Json"
 
-      - name: Upload SOOS DAST SARIF Report
+      - name: Upload SOOS DAST Report to Security Tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
