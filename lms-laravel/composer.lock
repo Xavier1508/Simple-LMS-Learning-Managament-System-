@@ -4,10 +4,10 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8f2c3e488054364717e90c88751ca0e1",
+    "content-hash": "652265a0f7efb13e91f2e84ec2778924",
     "packages": [
         {
-            "name": "bepsvpt/laravel-security-header",
+            "name": "bepsvpt/secure-headers",
             "version": "9.0.0",
             "source": {
                 "type": "git",
@@ -83,7 +83,6 @@
                     "type": "open_collective"
                 }
             ],
-            "abandoned": "bepsvpt/secure-headers",
             "time": "2025-01-18T07:18:04+00:00"
         },
         {

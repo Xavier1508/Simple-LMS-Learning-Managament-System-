@@ -35,7 +35,7 @@ jobs:
           target_url: ${{ secrets.RAILWAY_APP_URL }}
           
           # Output configuration
-          export_format: "Sarif"
+          output_format: "sarif"
           
           
       # UPGRADE: CodeQL Action v3 → v4
