@@ -7,9 +7,11 @@ namespace App\Http\Controllers;
  * version="1.0.0",
  * title="Ascend LMS API Documentation",
  * description="Dokumentasi API Lengkap untuk Ascend LMS - Project Secure Programming.",
+ *
  * @OA\Contact(
  * email="admin@ascendlms.com"
  * ),
+ *
  * @OA\License(
  * name="Apache 2.0",
  * url="http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -29,10 +31,13 @@ abstract class Controller
      * tags={"System"},
      * summary="Check API Status",
      * description="Endpoint untuk mengecek apakah API berjalan dengan baik.",
+     *
      * @OA\Response(
      * response=200,
      * description="Successful operation",
+     *
      * @OA\JsonContent(
+     *
      * @OA\Property(property="status", type="string", example="OK"),
      * @OA\Property(property="timestamp", type="string", format="date-time")
      * )

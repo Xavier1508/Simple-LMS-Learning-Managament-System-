@@ -27,19 +27,19 @@ class LMSPolicy extends Basic
                 Keyword::UNSAFE_INLINE,
                 Keyword::UNSAFE_EVAL,
                 'https://cdn.jsdelivr.net',
-                'https://cdnjs.cloudflare.com', 
+                'https://cdnjs.cloudflare.com',
             ])
             ->addDirective(Directive::STYLE, [
                 Keyword::SELF,
                 Keyword::UNSAFE_INLINE,
                 'https://cdnjs.cloudflare.com',
-                'https://fonts.googleapis.com', 
+                'https://fonts.googleapis.com',
             ])
             ->addDirective(Directive::FONT, [
                 Keyword::SELF,
                 'https://cdnjs.cloudflare.com',
                 'https://fonts.gstatic.com',
-                'data:', 
+                'data:',
             ]);
     }
 }
