@@ -223,17 +223,6 @@ return [
             'origins' => [],
         ],
 
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/ambient-light-sensor
-        'ambient-light-sensor' => [
-            'none' => false,
-
-            '*' => false,
-
-            'self' => true,
-
-            'origins' => [],
-        ],
-
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/attribution-reporting
         'attribution-reporting' => [
             'none' => false,
@@ -318,17 +307,6 @@ return [
             '*' => false,
 
             'self' => true,
-
-            'origins' => [],
-        ],
-
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/document-domain
-        'document-domain' => [
-            'none' => false,
-
-            '*' => true,
-
-            'self' => false,
 
             'origins' => [],
         ],
@@ -542,17 +520,6 @@ return [
             'origins' => [],
         ],
 
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/speaker-selection
-        'speaker-selection' => [
-            'none' => false,
-
-            '*' => false,
-
-            'self' => true,
-
-            'origins' => [],
-        ],
-
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/storage-access
         'storage-access' => [
             'none' => false,
@@ -577,17 +544,6 @@ return [
 
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/web-share
         'web-share' => [
-            'none' => false,
-
-            '*' => false,
-
-            'self' => true,
-
-            'origins' => [],
-        ],
-
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/window-management
-        'window-management' => [
             'none' => false,
 
             '*' => false,
