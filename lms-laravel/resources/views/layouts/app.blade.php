@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="refresh" content="{{ (config('session.lifetime') * 60) + 60 }};url={{ route('login') }}" />
 
     <title>{{ $title ?? config('app.name', 'Ascend LMS') }}</title>
 
-     <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -40,7 +41,7 @@
                     @if(View::exists('livewire.profile-dropdown'))
                         <livewire:profile-dropdown />
                     @else
-                         <div class="font-bold text-gray-700">{{ auth()->user()->first_name ?? 'User' }}</div>
+                        <div class="font-bold text-gray-700">{{ auth()->user()->first_name ?? 'User' }}</div>
                     @endif
                 </div>
             </header>
