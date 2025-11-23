@@ -7,29 +7,26 @@
 
     <title>{{ $title ?? config('app.name', 'Ascend LMS') }}</title>
 
-    {{-- Font Awesome & Lucide --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
-
-    {{-- Scripts --}}
+     <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <div class="flex h-screen w-full overflow-hidden">
-
-        {{-- PANGGIL SIDEBAR SEBAGAI KOMPONEN (FIX UNTUK TEST) --}}
+        {{-- SIDEBAR --}}
         <livewire:layout.navigation />
 
         {{-- MAIN CONTENT --}}
         <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-gray-50 relative">
+
+            {{-- HEADER --}}
             <header class="sticky top-0 z-30 flex-shrink-0 bg-white border-b border-gray-200 px-8 py-4 shadow-sm flex items-center justify-between">
                 <div class="w-full max-w-2xl">
-                    {{-- Pastikan global-search component ada, jika tidak error view akan muncul --}}
                     @if(View::exists('livewire.global-search'))
                         <livewire:global-search />
                     @else
-                        <input type="text" placeholder="Search..." class="w-full border-gray-300 rounded-lg">
+                        <input type="text" placeholder="Search..." class="w-full border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
                     @endif
                 </div>
 
@@ -40,11 +37,10 @@
                     </button>
                     <div class="h-8 w-px bg-gray-200"></div>
 
-                    {{-- Pastikan profile-dropdown ada --}}
                     @if(View::exists('livewire.profile-dropdown'))
                         <livewire:profile-dropdown />
                     @else
-                         <div class="font-bold text-gray-700">{{ auth()->user()->first_name }}</div>
+                         <div class="font-bold text-gray-700">{{ auth()->user()->first_name ?? 'User' }}</div>
                     @endif
                 </div>
             </header>
@@ -56,9 +52,5 @@
     </div>
 
     @stack('scripts')
-    <script>
-        document.addEventListener('livewire:navigated', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
-        document.addEventListener('DOMContentLoaded', () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
-    </script>
 </body>
 </html>

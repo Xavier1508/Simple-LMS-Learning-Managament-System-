@@ -15,6 +15,7 @@ class LMSPolicy extends Basic
             ->addDirective(Directive::CONNECT, [
                 Keyword::SELF,
                 'https://cloudflareinsights.com',
+                'https://*.cloudflare.com',
             ])
             ->addDirective(Directive::DEFAULT, Keyword::SELF)
             ->addDirective(Directive::FORM_ACTION, Keyword::SELF)
@@ -22,29 +23,23 @@ class LMSPolicy extends Basic
                 Keyword::SELF,
                 'data:',
                 'https://placehold.co',
-                '*',
+                '*', // Mengizinkan gambar dari mana saja (Penting untuk upload user)
             ])
             ->addDirective(Directive::MEDIA, Keyword::SELF)
             ->addDirective(Directive::OBJECT, Keyword::NONE)
             ->addDirective(Directive::SCRIPT, [
                 Keyword::SELF,
-                Keyword::UNSAFE_INLINE,
-                Keyword::UNSAFE_EVAL,
-                'https://cdn.jsdelivr.net',
-                'https://cdnjs.cloudflare.com',
+                Keyword::UNSAFE_INLINE, // Wajib untuk Livewire/Alpine
+                Keyword::UNSAFE_EVAL,   // Wajib untuk Alpine.js
                 'https://static.cloudflareinsights.com',
-                'https://cloudflareinsights.com',
+                'https://*.cloudflare.com',
             ])
             ->addDirective(Directive::STYLE, [
                 Keyword::SELF,
-                Keyword::UNSAFE_INLINE,
-                'https://cdnjs.cloudflare.com',
-                'https://fonts.googleapis.com',
+                Keyword::UNSAFE_INLINE, // Wajib untuk atribut style="" di HTML
             ])
             ->addDirective(Directive::FONT, [
                 Keyword::SELF,
-                'https://cdnjs.cloudflare.com',
-                'https://fonts.gstatic.com',
                 'data:',
             ]);
     }
