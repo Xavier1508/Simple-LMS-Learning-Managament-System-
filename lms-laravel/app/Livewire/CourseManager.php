@@ -18,22 +18,30 @@ class CourseManager extends Component
 {
     // Filter Variables
     public string $selectedSemester = '2025, Odd Semester';
+
     public string $selectedType = 'ALL';
 
     // Modal Variables
     public bool $showAddModal = false;
+
     public bool $showDeleteModal = false;
+
     public ?int $classToDeleteId = null;
 
     // Input Form Variables
     public string $title = '';
+
     public string $class_code = '';
+
     public string $type = 'LEC';
+
     public string $description = '';
 
     // Student Search Feature Variables
     public string $studentSearchQuery = '';
+
     public array $studentSearchResults = [];
+
     public array $selectedStudents = []; // Array untuk menyimpan multiple students
 
     // Dropdown Jurusan
@@ -66,6 +74,7 @@ class CourseManager extends Component
         // Reset jika query terlalu pendek
         if (strlen($this->studentSearchQuery) < 2) {
             $this->studentSearchResults = [];
+
             return;
         }
 
@@ -75,13 +84,13 @@ class CourseManager extends Component
 
         $this->studentSearchResults = User::where('role', 'student')
             ->whereNotIn('id', $selectedIds)
-            ->where(function($q) {
-                $q->where('name', 'like', '%' . $this->studentSearchQuery . '%')
-                  ->orWhere('email', 'like', '%' . $this->studentSearchQuery . '%');
+            ->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->studentSearchQuery.'%')
+                    ->orWhere('email', 'like', '%'.$this->studentSearchQuery.'%');
             })
             ->take(8)
             ->get()
-            ->map(function($user) {
+            ->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -101,7 +110,7 @@ class CourseManager extends Component
             // Cek apakah sudah ada di list
             $exists = collect($this->selectedStudents)->contains('id', $id);
 
-            if (!$exists) {
+            if (! $exists) {
                 $this->selectedStudents[] = [
                     'id' => $student->id,
                     'name' => $student->name,
@@ -120,7 +129,7 @@ class CourseManager extends Component
     public function removeStudent(int $id)
     {
         $this->selectedStudents = collect($this->selectedStudents)
-            ->filter(fn($student) => $student['id'] !== $id)
+            ->filter(fn ($student) => $student['id'] !== $id)
             ->values()
             ->toArray();
     }
@@ -131,7 +140,7 @@ class CourseManager extends Component
         $words = explode(' ', trim($name));
 
         if (count($words) >= 2) {
-            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+            return strtoupper(substr($words[0], 0, 1).substr($words[1], 0, 1));
         }
 
         return strtoupper(substr($name, 0, 2));
@@ -212,10 +221,10 @@ class CourseManager extends Component
             'showAddModal',
             'studentSearchQuery',
             'studentSearchResults',
-            'selectedStudents'
+            'selectedStudents',
         ]);
 
-        session()->flash('message', 'Class created successfully with 13 Sessions and ' . count($this->selectedStudents) . ' students invited!');
+        session()->flash('message', 'Class created successfully with 13 Sessions and '.count($this->selectedStudents).' students invited!');
     }
 
     public function confirmDelete(int $id): void

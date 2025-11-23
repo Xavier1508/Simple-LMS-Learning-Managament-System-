@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 
 class FixMissingSessions extends Command
 {
-    // Nama command yang akan kita panggil nanti
     protected $signature = 'course:fix-sessions';
 
     protected $description = 'Generate 13 default sessions for classes that have none';

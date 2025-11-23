@@ -16,18 +16,18 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
-            $table->string('phone_number')->nullable(); // Nomor telepon
+            $table->string('phone_number')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
             // Kolom Khusus Dosen
-            $table->string('lecturer_code')->nullable()->unique(); // Kode Dosen (hanya diisi untuk Dosen)
-            $table->string('private_number', 16)->nullable(); // Private Number (hanya diisi untuk Dosen)
+            $table->string('lecturer_code')->nullable()->unique();
+            $table->string('private_number', 16)->nullable();
 
             $table->string('otp_code', 9)->nullable();
             $table->timestamp('otp_expires_at')->nullable();
 
-            $table->enum('role', ['student', 'lecturer', 'admin'])->default('student'); // Tambah role 'lecturer'
+            $table->enum('role', ['student', 'lecturer', 'admin'])->default('student');
             $table->rememberToken();
             $table->timestamps();
         });
