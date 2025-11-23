@@ -8,7 +8,7 @@
     <title>{{ $title ?? config('app.name', 'Ascend LMS') }}</title>
 
      <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
-     
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">

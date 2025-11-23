@@ -18,29 +18,26 @@ class CourseManager extends Component
 {
     // Filter Variables
     public string $selectedSemester = '2025, Odd Semester';
-
     public string $selectedType = 'ALL';
 
     // Modal Variables
     public bool $showAddModal = false;
-
     public bool $showDeleteModal = false;
-
     public ?int $classToDeleteId = null;
 
     // Input Form Variables
     public string $title = '';
-
     public string $class_code = '';
-
     public string $type = 'LEC';
-
     public string $description = '';
 
-    public ?string $student_email_invite = null;
+    // Student Search Feature Variables
+    public string $studentSearchQuery = '';
+    public array $studentSearchResults = [];
+    public array $selectedStudents = []; // Array untuk menyimpan multiple students
 
-    // VARIABEL BARU: Dropdown Jurusan
-    public string $selectedMajorPrefix = 'COMP'; // Default
+    // Dropdown Jurusan
+    public string $selectedMajorPrefix = 'COMP';
 
     // Daftar Jurusan
     /** @var array<string, string> */
@@ -61,8 +58,84 @@ class CourseManager extends Component
         'selectedMajorPrefix' => 'required|string',
         'class_code' => 'required|string',
         'type' => 'required|in:LEC,LAB',
-        'student_email_invite' => 'nullable|email|exists:users,email',
     ];
+
+    // Student Search Logic
+    public function updatedStudentSearchQuery()
+    {
+        // Reset jika query terlalu pendek
+        if (strlen($this->studentSearchQuery) < 2) {
+            $this->studentSearchResults = [];
+            return;
+        }
+
+        // Cari user dengan role 'student' berdasarkan nama atau email
+        // Exclude students yang sudah dipilih
+        $selectedIds = array_column($this->selectedStudents, 'id');
+
+        $this->studentSearchResults = User::where('role', 'student')
+            ->whereNotIn('id', $selectedIds)
+            ->where(function($q) {
+                $q->where('name', 'like', '%' . $this->studentSearchQuery . '%')
+                  ->orWhere('email', 'like', '%' . $this->studentSearchQuery . '%');
+            })
+            ->take(8)
+            ->get()
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'initials' => $this->getInitials($user->name),
+                ];
+            })
+            ->toArray();
+    }
+
+    // Pilih student dari dropdown
+    public function selectStudent(int $id)
+    {
+        $student = User::find($id);
+
+        if ($student && $student->role === 'student') {
+            // Cek apakah sudah ada di list
+            $exists = collect($this->selectedStudents)->contains('id', $id);
+
+            if (!$exists) {
+                $this->selectedStudents[] = [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'email' => $student->email,
+                    'initials' => $this->getInitials($student->name),
+                ];
+            }
+
+            // Reset pencarian
+            $this->studentSearchQuery = '';
+            $this->studentSearchResults = [];
+        }
+    }
+
+    // Hapus student dari selected list
+    public function removeStudent(int $id)
+    {
+        $this->selectedStudents = collect($this->selectedStudents)
+            ->filter(fn($student) => $student['id'] !== $id)
+            ->values()
+            ->toArray();
+    }
+
+    // Helper untuk generate initials
+    private function getInitials(string $name): string
+    {
+        $words = explode(' ', trim($name));
+
+        if (count($words) >= 2) {
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+        }
+
+        return strtoupper(substr($name, 0, 2));
+    }
 
     // Helper untuk generate 7 angka random
     private function generateAutoCode(string $prefix): string
@@ -79,10 +152,10 @@ class CourseManager extends Component
     {
         $this->validate();
 
-        // 1. Generate Kode Otomatis (COMP + Angka)
+        // 1. Generate Kode Otomatis
         $generatedCode = $this->generateAutoCode($this->selectedMajorPrefix);
 
-        // 2. Cari atau Buat Mata Kuliah Utama (Parent Course)
+        // 2. Cari atau Buat Mata Kuliah Utama
         /** @var Course $course */
         $course = Course::firstOrCreate(
             ['code' => $generatedCode],
@@ -92,7 +165,7 @@ class CourseManager extends Component
             ]
         );
 
-        // 3. Buat Kelas Spesifik (Instance)
+        // 3. Buat Kelas Spesifik
         /** @var CourseClass $newClass */
         $newClass = CourseClass::create([
             'course_id' => $course->id,
@@ -102,8 +175,8 @@ class CourseManager extends Component
             'type' => $this->type,
         ]);
 
-        // --- LOGIKA BARU: GENERATE 13 SESI OTOMATIS ---
-        $startDate = \Carbon\Carbon::now()->next('Monday')->setTime(13, 0); // Mulai Senin depan jam 13:00
+        // 4. Generate 13 Sesi Otomatis
+        $startDate = \Carbon\Carbon::now()->next('Monday')->setTime(13, 0);
 
         for ($i = 1; $i <= 13; $i++) {
             $isOnsite = $i % 2 != 0;
@@ -122,21 +195,27 @@ class CourseManager extends Component
             $startDate->addWeek();
         }
 
-        // 4. Invite Siswa (Jika email diisi)
-        if ($this->student_email_invite) {
-            /** @var User|null $student */
-            $student = User::where('email', $this->student_email_invite)->first();
-            if ($student && $student->role === 'student') {
-                Enrollment::create([
-                    'user_id' => $student->id,
-                    'course_class_id' => $newClass->id,
-                ]);
-            }
+        // 5. Invite Selected Students
+        foreach ($this->selectedStudents as $studentData) {
+            Enrollment::create([
+                'user_id' => $studentData['id'],
+                'course_class_id' => $newClass->id,
+            ]);
         }
 
-        $this->reset(['title', 'selectedMajorPrefix', 'class_code', 'description', 'student_email_invite', 'showAddModal']);
+        // Reset All States
+        $this->reset([
+            'title',
+            'selectedMajorPrefix',
+            'class_code',
+            'description',
+            'showAddModal',
+            'studentSearchQuery',
+            'studentSearchResults',
+            'selectedStudents'
+        ]);
 
-        session()->flash('message', 'Class created successfully with 13 Sessions!');
+        session()->flash('message', 'Class created successfully with 13 Sessions and ' . count($this->selectedStudents) . ' students invited!');
     }
 
     public function confirmDelete(int $id): void

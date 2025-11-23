@@ -12,10 +12,14 @@
 {{-- SESSION NAVIGATION --}}
 <div class="flex space-x-2 pb-4 mb-5 mt-4 overflow-x-auto">
     @foreach($class->sessions as $session)
-        {{-- PERBAIKAN 1: Ganti === menjadi == agar tombol aktif menyala --}}
-        <button wire:click="toggleSession({{ $session->id }})"
+        <button
+            wire:click="setActiveSession({{ $session->id }})"
             class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition duration-150 border
-            {{ $activeSessionId == $session->id ? 'bg-orange-500 text-white shadow-lg border-orange-500' : 'bg-gray-200 text-gray-600 hover:bg-gray-300 border-transparent' }}">
+            {{-- PERBAIKAN: Menambahkan 'cursor-default' pada state aktif agar UX lebih jelas --}}
+            {{ $activeSessionId == $session->id
+                ? 'bg-orange-500 text-white shadow-lg border-orange-500 cursor-default'
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300 border-transparent'
+            }}">
             Session {{ $session->session_number }}
         </button>
     @endforeach
@@ -27,7 +31,6 @@
     {{-- LEFT COLUMN: Session Detail --}}
     <div class="min-w-0">
         @foreach($class->sessions as $session)
-            {{-- PERBAIKAN 2: Ganti === menjadi == agar konten muncul --}}
             @if($activeSessionId == $session->id)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in-down h-full">
                     <div class="p-6 border-b border-gray-100">
@@ -46,11 +49,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 bg-gray-50 p-5 rounded-lg border border-gray-100">
                             <div>
                                 <p class="text-gray-500 text-xs uppercase font-bold mb-1">Start Time</p>
-                                <p class="font-medium text-gray-800 text-lg">{{ $session->start_time->format('d M Y, H:i') }}</p>
+                                <p class="font-medium text-gray-800 text-lg">{{ $session->start_time ? $session->start_time->format('d M Y, H:i') : '-' }}</p>
                             </div>
                             <div>
                                 <p class="text-gray-500 text-xs uppercase font-bold mb-1">End Time</p>
-                                <p class="font-medium text-gray-800 text-lg">{{ $session->end_time->format('d M Y, H:i') }}</p>
+                                <p class="font-medium text-gray-800 text-lg">{{ $session->end_time ? $session->end_time->format('d M Y, H:i') : '-' }}</p>
                             </div>
                         </div>
                     </div>
@@ -62,11 +65,16 @@
     {{-- RIGHT COLUMN: Action Sidebar --}}
     <div class="w-full">
         @foreach($class->sessions as $session)
-            {{-- PERBAIKAN 3: Ganti === menjadi == agar sidebar kanan muncul --}}
             @if($activeSessionId == $session->id)
                 @php
+                    // Ambil record attendance user (jika ada)
                     $myRecord = $session->attendances->where('user_id', Auth::id())->first();
-                    $statusData = $this->getStatusDisplay($session, $myRecord);
+
+                    // Pastikan method getStatusDisplay ada di Controller atau trait WithAttendance
+                    // Jika method ini ada di controller Livewire, panggil via $this
+                    $statusData = method_exists($this, 'getStatusDisplay')
+                        ? $this->getStatusDisplay($session, $myRecord)
+                        : ['type' => 'default', 'label' => 'Check Status'];
                 @endphp
 
                 <div class="bg-orange-500 rounded-2xl shadow-xl text-white p-6 sticky top-24">
@@ -166,18 +174,26 @@
                             <div class="space-y-3 pl-2">
                                 @foreach($session->materials as $material)
                                     <div class="flex justify-between items-center group hover:bg-white/5 p-1 rounded transition">
+                                        {{-- PREVIEW --}}
                                         <button wire:click="previewMaterial({{ $material->id }})" class="text-sm text-white/90 hover:text-white truncate text-left flex-1 flex items-center mr-2">
                                             <span class="mr-3 opacity-80 flex-shrink-0">
-                                                {!! $this->getFileIcon($material->file_type) !!}
+                                                {{-- Jika getFileIcon adalah method di trait/component --}}
+                                                @if(method_exists($this, 'getFileIcon'))
+                                                    {!! $this->getFileIcon($material->file_type) !!}
+                                                @else
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                @endif
                                             </span>
                                             <span class="truncate font-medium">{{ $material->file_name }}</span>
                                         </button>
 
                                         <div class="flex items-center space-x-1 flex-shrink-0 opacity-70 group-hover:opacity-100 transition">
+                                            {{-- DOWNLOAD --}}
                                             <button wire:click="downloadMaterial({{ $material->id }})" class="p-1.5 text-white hover:bg-white/20 rounded" title="Download">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                             </button>
 
+                                            {{-- DELETE (Lecturer Only) --}}
                                             @if(Auth::user()->role === 'lecturer')
                                                 <button wire:click="deleteMaterial({{ $material->id }})" class="p-1.5 text-red-200 hover:text-white hover:bg-red-500/50 rounded" title="Delete">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>

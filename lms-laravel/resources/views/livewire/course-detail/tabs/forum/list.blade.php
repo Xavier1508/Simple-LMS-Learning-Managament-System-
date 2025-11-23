@@ -1,27 +1,50 @@
 <div>
-    {{-- 1. SESSION NAVIGATION (SAMA PERSIS DENGAN TABS SESSION) --}}
+    {{-- SESSION NAVIGATION --}}
     <div class="flex space-x-2 pb-4 mb-5 mt-4 overflow-x-auto">
         @foreach($class->sessions as $session)
-            <button wire:click="toggleSession({{ $session->id }})"
-                class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition duration-150
-                {{ $activeSessionId === $session->id
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300' }}">
+            {{-- [PERBAIKAN] wire:click sekarang memanggil setActiveSession --}}
+            {{-- Logic button: Jika aktif, dia Active. Jika diklik lagi, dia TETAP Active (karena logic PHP sudah diperbaiki) --}}
+            <button
+                wire:click="setActiveSession({{ $session->id }})"
+                class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition duration-150 border
+                {{ $activeSessionId == $session->id
+                    ? 'bg-orange-500 text-white shadow-lg border-orange-500 cursor-default'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300 border-transparent'
+                }}">
                 Session {{ $session->session_number }}
             </button>
         @endforeach
     </div>
 
-    {{-- 2. SESSION HEADER INFO (LAYOUT SAMA DENGAN SESSION, CONTENT DISESUAIKAN) --}}
     @php
-        $currentSession = $class->sessions->firstWhere('id', $activeSessionId);
+        // Logic Data Fetching
+        $safeSessionId = $activeSessionId ?? null;
 
-        // Hitung total post
-        $totalThreads = \App\Models\ForumThread::where('course_session_id', $activeSessionId)->count();
-        $totalReplies = \App\Models\ForumPost::whereHas('thread', fn($q) => $q->where('course_session_id', $activeSessionId))->count();
-        $grandTotalPost = $totalThreads + $totalReplies;
+        // Cari session object berdasarkan ID yang aktif
+        $currentSession = $class->sessions->firstWhere('id', $safeSessionId);
+
+        // Safety check: Jika entah kenapa null (misal baru load), ambil sesi pertama
+        if (!$currentSession && $class->sessions->count() > 0) {
+            $currentSession = $class->sessions->first();
+            $safeSessionId = $currentSession->id;
+        }
+
+        $grandTotalPost = 0;
+        $totalThreads = 0;
+
+        // Hitung statistik post hanya jika ada session valid
+        if ($safeSessionId) {
+            $totalThreads = \App\Models\ForumThread::where('course_session_id', $safeSessionId)->count();
+
+            $totalReplies = \App\Models\ForumPost::whereHas('thread', function($q) use ($safeSessionId) {
+                $q->where('course_session_id', $safeSessionId);
+            })->count();
+
+            $grandTotalPost = $totalThreads + $totalReplies;
+        }
     @endphp
 
+    @if($currentSession)
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 animate-fade-in-down">
         <div class="p-6 border-b border-gray-100">
             <h2 class="text-xl font-bold text-gray-800">{{ $currentSession->title }}</h2>
@@ -30,29 +53,28 @@
 
         {{-- Area Informasi (Background Abu) --}}
         <div class="p-6 bg-gray-50">
-            {{-- Grid 3 Kolom agar rapi --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                 <div>
                     <p class="text-gray-500 text-xs uppercase tracking-wide font-bold mb-1">Start Time</p>
-                    <p class="font-medium text-gray-800">{{ $currentSession->start_time->format('d M Y, H:i') }} GMT+7</p>
+                    <p class="font-medium text-gray-800">{{ $currentSession->start_time ? $currentSession->start_time->format('d M Y, H:i') : '-' }} GMT+7</p>
                 </div>
                 <div>
                     <p class="text-gray-500 text-xs uppercase tracking-wide font-bold mb-1">End Time</p>
-                    <p class="font-medium text-gray-800">{{ $currentSession->end_time->format('d M Y, H:i') }} GMT+7</p>
+                    <p class="font-medium text-gray-800">{{ $currentSession->end_time ? $currentSession->end_time->format('d M Y, H:i') : '-' }} GMT+7</p>
                 </div>
                 <div>
-                    {{-- GANTI Learning Outcome DENGAN Total Post --}}
                     <p class="text-gray-500 text-xs uppercase tracking-wide font-bold mb-1">Total Post</p>
                     <p class="font-bold text-gray-900 text-lg">{{ $grandTotalPost }}</p>
                 </div>
             </div>
         </div>
     </div>
+    @endif
 
-    {{-- 3. TOOLBAR (CREATE & FILTER) --}}
+    {{-- TOOLBAR (CREATE & FILTER) --}}
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
 
-        {{-- Tombol Create (Full width di mobile, auto di desktop) --}}
+        {{-- Tombol Create --}}
         <button wire:click="switchToCreateThread" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-6 rounded shadow hover:shadow-md transition transform hover:-translate-y-0.5 text-sm uppercase tracking-wide">
             Create New Thread
         </button>
@@ -71,7 +93,8 @@
             <div class="h-4 w-px bg-gray-300"></div>
 
             <div class="flex items-center space-x-2">
-                <span>1 Result(s)</span>
+                {{-- Dynamic Result Count --}}
+                <span>{{ isset($threads) ? $threads->count() : 0 }} Result(s)</span>
                 <span class="ml-2">Show:</span>
                 <select class="border border-gray-300 rounded px-2 py-1.5 focus:ring-orange-500 focus:border-orange-500 bg-white text-gray-700 cursor-pointer">
                     <option>10</option>
@@ -90,13 +113,16 @@
         </div>
     </div>
 
-    {{-- 4. THREAD LIST --}}
+    {{-- THREAD LIST --}}
     <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden min-h-[400px] flex flex-col">
         @php
-            $threads = \App\Models\ForumThread::where('course_session_id', $activeSessionId)
-                ->with('user', 'posts')
-                ->latest()
-                ->get();
+            $threads = collect();
+            if ($safeSessionId) {
+                $threads = \App\Models\ForumThread::where('course_session_id', $safeSessionId)
+                    ->with('user', 'posts')
+                    ->latest()
+                    ->get();
+            }
         @endphp
 
         @if($threads->count() > 0)
@@ -168,7 +194,7 @@
             </div>
 
         @else
-            {{-- Placeholder Kosong (LEBIH BESAR & TENGAH) --}}
+            {{-- Placeholder Kosong --}}
             <div class="flex-1 flex flex-col items-center justify-center py-32 text-center">
                 <div class="bg-gray-50 p-6 rounded-full mb-4">
                     <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

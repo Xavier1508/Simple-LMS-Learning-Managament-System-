@@ -10,8 +10,9 @@ use App\Livewire\Traits\Course\WithMaterials;
 use App\Livewire\Traits\Course\WithPeople;
 use App\Models\CourseClass;
 use App\Models\CourseSession;
+use App\Models\Assignment;
+use App\Models\ForumThread;
 use Carbon\Carbon;
-// Import Traits
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -19,11 +20,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-/**
- * Mendefinisikan properti magic untuk PHPStan
- *
- * @property CourseClass $class
- */
 #[Layout('layouts.app')]
 class CourseDetail extends Component
 {
@@ -44,15 +40,18 @@ class CourseDetail extends Component
     public function mount(int $id): void
     {
         $this->courseClassId = $id;
-
         $reqTab = request()->query('tab');
+        $reqSession = request()->query('session_id');
+        $reqThread = request()->query('open_thread');
+        $reqAssessment = request()->query('open_assessment'); // <--- Tangkap Assessment ID
+
+        // 2. Set Active Tab
         if (is_string($reqTab)) {
             if (in_array($reqTab, ['session', 'attendance', 'gradebook', 'forum', 'assessment', 'people'])) {
                 $this->activeTab = $reqTab;
             }
         }
 
-        $reqSession = request()->query('session_id');
         $now = Carbon::now();
 
         /** @var CourseSession|null $closestSession */
@@ -71,6 +70,28 @@ class CourseDetail extends Component
             /** @var CourseSession|null $first */
             $first = CourseSession::where('course_class_id', $id)->first();
             $this->activeSessionId = $first ? $first->id : null;
+        }
+
+        // [DIRECT LINK: FORUM]
+        if ($reqThread && is_numeric($reqThread)) {
+            if (method_exists($this, 'openThread')) {
+                $thread = ForumThread::find($reqThread);
+                if ($thread && $thread->session->course_class_id == $this->courseClassId) {
+                    $this->activeSessionId = $thread->course_session_id;
+                    $this->openThread((int) $reqThread);
+                }
+            }
+        }
+
+        // [DIRECT LINK: ASSESSMENT]
+        if ($reqAssessment && is_numeric($reqAssessment)) {
+            if (method_exists($this, 'openAssessmentDetail')) {
+                $assign = Assignment::find($reqAssessment);
+                if ($assign && $assign->course_class_id == $this->courseClassId) {
+                    $this->activeTab = 'assessment'; // Paksa pindah tab
+                    $this->openAssessmentDetail((int) $reqAssessment);
+                }
+            }
         }
 
         if (method_exists($this, 'ensureGradeComponentsExist')) {
@@ -100,18 +121,18 @@ class CourseDetail extends Component
         $this->activeTab = $tab;
     }
 
-    public function toggleSession(int $sessionId): void
+    public function setActiveSession(int $sessionId): void
     {
-        $this->activeSessionId = ($this->activeSessionId === $sessionId) ? null : $sessionId;
+        if ($this->activeSessionId === $sessionId) {
+            return;
+        }
+        $this->activeSessionId = $sessionId;
     }
 
     public function render(): View
     {
-        // Kita akses Computed Property via $this->class
         $courseClass = $this->class;
-
         $summary = [];
-        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($user->role === 'student') {

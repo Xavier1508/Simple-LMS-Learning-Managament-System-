@@ -18,19 +18,17 @@ trait WithAssessment
 
     // Create Assessment (Lecturer)
     public $newAssessTitle;
-
     public $newAssessDesc;
-
     public $newAssessFile;
-
     public $newAssessDue;
+
+    // Update Assessment (Lecturer)
+    public $editAssessDue; // Variable baru untuk update deadline
 
     // Submission (Student)
     public $submissionFile;
-
-    public $submissionText; // Untuk input text yg akan di-convert ke TXT
-
-    public $showSubmitConfirmModal = false; // Modal konfirmasi "Are you sure?"
+    public $submissionText;
+    public $showSubmitConfirmModal = false;
 
     // --- NAVIGASI ---
     public function switchToAssessmentList()
@@ -48,21 +46,123 @@ trait WithAssessment
     public function openAssessmentDetail($id)
     {
         $this->selectedAssignmentId = $id;
+
+        // Populate data edit deadline saat membuka detail
+        $assignment = Assignment::find($id);
+        if ($assignment) {
+            $this->editAssessDue = $assignment->due_date ? $assignment->due_date->format('Y-m-d\TH:i') : null;
+        }
+
         $this->assessmentState = 'detail';
     }
 
-    // --- LECTURER: CREATE ASSIGNMENT ---
-    public function createAssignment()
+    // --- LECTURER: MANAGE ASSESSMENT (NEW FEATURES) ---
+
+    // 1. Toggle Lock / Always Open
+    public function toggleLockStatus($id)
     {
-        if (Auth::user()->role !== 'lecturer') {
+        if (Auth::user()->role !== 'lecturer') return;
+
+        $assignment = Assignment::find($id);
+        if (!$assignment) return;
+
+        // Toggle Logic
+        $assignment->is_lock = !$assignment->is_lock;
+        $assignment->save();
+
+        // Feedback Logic
+        $status = $assignment->is_lock ? 'LOCKED' : 'UNLOCKED';
+        session()->flash('message', "Assessment is now {$status}. " . ($assignment->is_lock ? "Students cannot submit." : "Students can submit (if time allows)."));
+    }
+
+    // 2. Update Deadline (Smart Detection)
+    public function updateDeadline($id)
+    {
+        if (Auth::user()->role !== 'lecturer') return;
+
+        $this->validate([
+            'editAssessDue' => 'required|date',
+        ]);
+
+        $assignment = Assignment::find($id);
+        if (!$assignment) return;
+
+        $newDate = Carbon::parse($this->editAssessDue);
+        $now = Carbon::now();
+        $createdAt = $assignment->created_at;
+
+        // VALIDASI PINTAR (SMART DETECTION)
+
+        // Kasus 1: Deadline baru di masa lalu (Mundur dari hari ini)
+        if ($newDate->lt($now)) {
+            $this->addError('editAssessDue', 'The new deadline is in the past. Please set a future date to re-open submissions effectively.');
             return;
         }
+
+        // Kasus 2: Deadline lebih lama dari tanggal pembuatan (Tidak Logis secara historis, tapi mungkin typo user)
+        if ($newDate->lt($createdAt)) {
+            $this->addError('editAssessDue', 'Error: New deadline cannot be earlier than when the assessment was created.');
+            return;
+        }
+
+        // Update
+        $assignment->due_date = $newDate;
+
+        // Otomatis Unlock jika user update deadline agar siswa bisa submit
+        if ($assignment->is_lock) {
+            $assignment->is_lock = false;
+            session()->flash('message', 'Deadline updated & Assessment UNLOCKED automatically.');
+        } else {
+            session()->flash('message', 'Deadline updated successfully.');
+        }
+
+        $assignment->save();
+    }
+
+    // 3. Delete Assessment
+    public function deleteAssessment($id)
+    {
+        if (Auth::user()->role !== 'lecturer') return;
+
+        $assignment = Assignment::find($id);
+        if (!$assignment) return;
+
+        // Syarat Delete: Harus Locked ATAU Deadline sudah lewat (Overdue)
+        // Ini mencegah dosen menghapus tugas yang sedang aktif dikerjakan siswa
+        if (!$assignment->is_lock && !$assignment->isOverdue()) {
+            session()->flash('error', 'Cannot delete Active Assessment. Please LOCK it first or wait until it is Overdue.');
+            return;
+        }
+
+        // Delete Logic (Termasuk file & submission)
+        // Hapus file soal
+        if ($assignment->attachment_path) {
+            Storage::disk('public')->delete($assignment->attachment_path);
+        }
+
+        // Hapus semua submission files
+        foreach ($assignment->submissions as $sub) {
+            if ($sub->file_path) {
+                Storage::disk('public')->delete($sub->file_path);
+            }
+        }
+
+        $assignment->delete(); // Cascade delete submissions biasanya di handle DB, tapi aman di sini
+
+        session()->flash('message', 'Assessment deleted successfully.');
+        $this->switchToAssessmentList();
+    }
+
+    // --- LECTURER: CREATE ASSIGNMENT (EXISTING) ---
+    public function createAssignment()
+    {
+        if (Auth::user()->role !== 'lecturer') return;
 
         $this->validate([
             'newAssessTitle' => 'required|string|max:255',
             'newAssessDesc' => 'required|string',
             'newAssessDue' => 'required|date|after:now',
-            'newAssessFile' => 'nullable|file|max:10240|mimes:pdf,doc,docx,zip,rar,jpg,png', // Security Filter
+            'newAssessFile' => 'nullable|file|max:10240|mimes:pdf,doc,docx,zip,rar,jpg,png',
         ]);
 
         $path = null;
@@ -86,17 +186,16 @@ trait WithAssessment
         $this->switchToAssessmentList();
     }
 
-    // --- STUDENT: SUBMIT TASK ---
+    // --- STUDENT: SUBMIT TASK (UPDATED LOGIC) ---
     public function confirmSubmission()
     {
         $this->validate([
-            'submissionFile' => 'nullable|file|max:20480', // Max 20MB
+            'submissionFile' => 'nullable|file|max:20480',
             'submissionText' => 'nullable|string',
         ]);
 
-        if (! $this->submissionFile && empty($this->submissionText)) {
+        if (!$this->submissionFile && empty($this->submissionText)) {
             $this->addError('submissionFile', 'Please upload a file or write a response.');
-
             return;
         }
 
@@ -107,24 +206,35 @@ trait WithAssessment
     {
         $assignment = Assignment::find($this->selectedAssignmentId);
 
-        // Security Check: Deadline & Lock
-        if ($assignment->isOverdue() || $assignment->is_lock) {
-            session()->flash('error', 'Submission is closed or overdue.');
-
+        // Logic Validasi Submission Baru
+        // 1. Cek Override Lock dulu
+        if ($assignment->is_lock) {
+            session()->flash('error', 'Submission is LOCKED by Lecturer.');
+            $this->showSubmitConfirmModal = false;
             return;
+        }
+
+        // 2. Cek Deadline (Hanya jika tidak dilock manual)
+        // Tapi dosen bisa saja unlock assessment yang sudah overdue (Special case: Extension)
+        // Jadi logic isOverdue() tetap berlaku KECUALI dosen secara eksplisit mengubah deadline
+        // atau kita anggap "Unlocked" = "Allow Late Submission".
+        // Disini kita pakai standar strict: Lewat deadline = Late (tapi boleh submit kalau sistem izinkan),
+        // atau Close total. Di sistem ini kita pakai Close total kalau overdue.
+
+        if ($assignment->isOverdue()) {
+             session()->flash('error', 'Deadline has passed. Submission Closed.');
+             $this->showSubmitConfirmModal = false;
+             return;
         }
 
         $path = null;
         $name = null;
 
-        // Handle File Upload
         if ($this->submissionFile) {
             $name = $this->submissionFile->getClientOriginalName();
-            // Store dengan nama acak (hashed) agar aman dari eksekusi script berbahaya
             $path = $this->submissionFile->store('submissions', 'public');
         }
 
-        // Tentukan Status (Late/Submitted)
         $status = Carbon::now()->gt($assignment->due_date) ? 'late' : 'submitted';
 
         Submission::updateOrCreate(
@@ -132,7 +242,7 @@ trait WithAssessment
             [
                 'file_path' => $path,
                 'file_name' => $name,
-                'text_content' => $this->submissionText, // Simpan text mentah juga
+                'text_content' => $this->submissionText,
                 'submitted_at' => Carbon::now(),
                 'status' => $status,
             ]
@@ -144,27 +254,19 @@ trait WithAssessment
     }
 
     // --- DOWNLOAD LOGIC ---
-
-    // Download Text sebagai .txt (Fitur Request)
     public function downloadTextSubmission($submissionId)
     {
         $submission = Submission::find($submissionId);
-
         if ($submission && $submission->text_content) {
             $content = 'Student Name: '.$submission->user->name."\n";
             $content .= 'Submitted At: '.$submission->submitted_at."\n";
             $content .= "------------------------------------------------\n\n";
             $content .= $submission->text_content;
-
             $fileName = 'text_submission_'.Str::slug($submission->user->name).'.txt';
-
-            return response()->streamDownload(function () use ($content) {
-                echo $content;
-            }, $fileName);
+            return response()->streamDownload(function () use ($content) { echo $content; }, $fileName);
         }
     }
 
-    // Download Attachment Siswa
     public function downloadSubmissionFile($submissionId)
     {
         $submission = Submission::find($submissionId);
@@ -175,6 +277,6 @@ trait WithAssessment
 
     private function resetAssessmentForm()
     {
-        $this->reset(['newAssessTitle', 'newAssessDesc', 'newAssessFile', 'newAssessDue', 'submissionFile', 'submissionText', 'showSubmitConfirmModal']);
+        $this->reset(['newAssessTitle', 'newAssessDesc', 'newAssessFile', 'newAssessDue', 'editAssessDue', 'submissionFile', 'submissionText', 'showSubmitConfirmModal']);
     }
 }

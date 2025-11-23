@@ -7,7 +7,7 @@
             <p class="text-sm text-gray-500">Track your tasks and deadlines.</p>
         </div>
 
-        {{-- Filter Tabs (Alpine Style) --}}
+        {{-- Filter Tabs --}}
         <div class="bg-white p-1 rounded-lg border border-gray-200 flex shadow-sm">
             <button wire:click="setFilter('upcoming')"
                 class="px-6 py-2 rounded-md text-sm font-bold transition {{ $filter === 'upcoming' ? 'bg-orange-500 text-white shadow' : 'text-gray-500 hover:bg-gray-50' }}">
@@ -51,7 +51,8 @@
                 } else {
                     // Logic Dosen
                     $submissionCount = $task->submissions->count();
-                    $totalStudents = $task->class->students->count(); // Asumsi relasi students ada
+                    // Asumsi relasi students ada via class, fallback ke 0 jika null
+                    $totalStudents = $task->class->students->count() ?? 0;
                     $statusClass = $isOverdue ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700';
                     $statusLabel = $isOverdue ? 'Closed' : 'Open';
                 }
@@ -63,20 +64,15 @@
                 <div class="absolute top-0 left-0 w-full h-1 {{ $isOverdue ? 'bg-gray-300' : 'bg-orange-500' }}"></div>
 
                 <div class="p-6 flex-1">
-                    {{-- Course Badge --}}
+                    {{-- Course Badge & Status --}}
                     <div class="flex justify-between items-start mb-3">
                         <span class="text-[10px] font-bold px-2 py-1 rounded bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
                             {{ $task->class->course->code }}
                         </span>
-                        @if($role === 'student')
-                            <span class="text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 {{ $statusClass }}">
-                                {{ $statusLabel }}
-                            </span>
-                        @else
-                            <span class="text-[10px] font-bold px-2 py-1 rounded {{ $statusClass }}">
-                                {{ $statusLabel }}
-                            </span>
-                        @endif
+
+                        <span class="text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 {{ $statusClass }}">
+                            {{ $statusLabel }}
+                        </span>
                     </div>
 
                     {{-- Title --}}
@@ -100,25 +96,36 @@
 
                 {{-- Footer Action --}}
                 <div class="bg-gray-50 p-4 border-t border-gray-100 mt-auto">
-                    @if($role === 'student')
-                        <a wire:navigate href="{{ route('courses.detail', ['id' => $task->class->id, 'tab' => 'assessment']) }}" class="block w-full text-center text-xs font-bold text-white bg-orange-500 py-2.5 rounded hover:bg-orange-600 transition shadow-sm">
-                            {{ $mySubmission ? 'View Submission' : ($isOverdue ? 'View Details' : 'Submit Assignment') }}
-                        </a>
-                    @else
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-xs text-gray-500 font-medium">Submissions</span>
-                            <span class="text-xs font-bold text-gray-700">{{ $submissionCount }} Students</span>
-                        </div>
-                        {{-- Progress Bar Dosen --}}
-                        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-3">
-                            @php $percent = ($totalStudents > 0) ? ($submissionCount / $totalStudents) * 100 : 0; @endphp
-                            <div class="h-1.5 rounded-full bg-blue-500" style="width: {{ $percent }}%"></div>
-                        </div>
 
-                        <a wire:navigate href="{{ route('courses.detail', ['id' => $task->class->id, 'tab' => 'assessment']) }}" class="block w-full text-center text-xs font-bold text-gray-600 border border-gray-300 bg-white py-2 rounded hover:bg-gray-50 transition">
-                            Grade / Manage
-                        </a>
-                    @endif
+                    {{-- [PERBAIKAN UTAMA: LINK DENGAN open_assessment] --}}
+                    <a wire:navigate href="{{ route('courses.detail', [
+                        'id' => $task->class->id,
+                        'tab' => 'assessment',
+                        'open_assessment' => $task->id
+                    ]) }}" class="block w-full">
+
+                        @if($role === 'student')
+                            <div class="text-center text-xs font-bold text-white bg-orange-500 py-2.5 rounded hover:bg-orange-600 transition shadow-sm">
+                                {{ $mySubmission ? 'View Submission' : ($isOverdue ? 'View Details' : 'Submit Assignment') }}
+                            </div>
+                        @else
+                            {{-- Dosen Stats --}}
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs text-gray-500 font-medium">Submissions</span>
+                                <span class="text-xs font-bold text-gray-700">{{ $submissionCount }} Students</span>
+                            </div>
+
+                            {{-- Progress Bar Dosen --}}
+                            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-3">
+                                @php $percent = ($totalStudents > 0) ? ($submissionCount / $totalStudents) * 100 : 0; @endphp
+                                <div class="h-1.5 rounded-full bg-blue-500" style="width: {{ $percent }}%"></div>
+                            </div>
+
+                            <div class="text-center text-xs font-bold text-gray-600 border border-gray-300 bg-white py-2 rounded hover:bg-gray-50 transition">
+                                Grade / Manage
+                            </div>
+                        @endif
+                    </a>
                 </div>
             </div>
         @empty
