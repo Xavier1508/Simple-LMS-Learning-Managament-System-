@@ -8,16 +8,16 @@ use Livewire\Volt\Component;
 
 new class extends Component
 {
-    public string $first_name = ''; // Fix
-    public string $last_name = '';  // Fix
-    public string $email = '';
+    public string $first_name = '';
+    public string $last_name = '';
+    public string $phone_number = ''; // Ubah dari email ke phone_number
 
     public function mount(): void
     {
         $user = Auth::user();
         $this->first_name = $user->first_name;
         $this->last_name = $user->last_name;
-        $this->email = $user->email;
+        $this->phone_number = $user->phone_number; // Ambil data no hp
     }
 
     public function updateProfileInformation(): void
@@ -27,18 +27,12 @@ new class extends Component
         $validated = $this->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'phone_number' => ['required', 'string', 'max:20', Rule::unique(User::class)->ignore($user->id)],
         ]);
 
         $user->fill($validated);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
         $user->save();
 
-        // Dispatch nama lengkap baru untuk notifikasi
         $this->dispatch('profile-updated', name: $user->first_name . ' ' . $user->last_name);
     }
 
@@ -62,7 +56,7 @@ new class extends Component
             {{ __('Profile Information') }}
         </h2>
         <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ __("Update your account's profile information and phone number.") }}
         </p>
     </header>
 
@@ -82,9 +76,9 @@ new class extends Component
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-input-label for="phone_number" :value="__('Phone Number')" />
+            <x-text-input wire:model="phone_number" id="phone_number" name="phone_number" type="text" class="mt-1 block w-full" required autocomplete="tel" />
+            <x-input-error class="mt-2" :messages="$errors->get('phone_number')" />
 
             @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
                 <div class="mt-2">

@@ -321,11 +321,11 @@ new #[Layout('layouts.guest')] class extends Component
             <div class="text-center pt-4">
                 <span class="text-sm text-gray-500">
                     Already have an account?
-                    <a href="{{ route('login.lecturer') }}" wire:navigate class="text-blue-600 font-semibold hover:text-blue-700">Login Dosen</a>
+                    <a href="{{ route('login.lecturer') }}" class="text-blue-600 font-semibold hover:text-blue-700">Login Dosen</a>
                 </span>
                 <p class="pt-4 text-sm text-gray-500 border-t border-gray-100 mt-4">
                     Daftar sebagai Mahasiswa?
-                    <a href="{{ route('register') }}" wire:navigate class="text-orange-600 font-semibold hover:text-orange-700">Daftar Mahasiswa</a>
+                    <a href="{{ route('register') }}" class="text-orange-600 font-semibold hover:text-orange-700">Daftar Mahasiswa</a>
                 </p>
             </div>
 

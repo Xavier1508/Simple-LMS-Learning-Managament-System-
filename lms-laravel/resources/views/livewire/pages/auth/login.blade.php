@@ -107,7 +107,7 @@ new #[Layout('layouts.guest')] class extends Component
                     </label>
 
                     @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" wire:navigate class="text-sm font-medium text-gray-600 hover:text-orange-600 transition duration-150">
+                        <a href="{{ route('password.request') }}" class="text-sm font-medium text-gray-600 hover:text-orange-600 transition duration-150">
                             Lupa Password?
                         </a>
                     @endif
@@ -141,12 +141,12 @@ new #[Layout('layouts.guest')] class extends Component
             <div class="text-center pt-4">
                 <span class="text-sm text-gray-500">
                     Don't have an account?
-                    <a href="{{ route('register') }}" wire:navigate class="text-orange-600 font-semibold hover:text-orange-700">Sign up</a>
+                    <a href="{{ route('register') }}" class="text-orange-600 font-semibold hover:text-orange-700">Sign up</a>
                 </span>
 
                 <p class="pt-4 text-sm text-gray-500 border-t border-gray-100 mt-4">
                     Atau Login sebagai Dosen?
-                    <a href="{{ route('login.lecturer') }}" wire:navigate class="text-blue-600 font-semibold hover:text-blue-700">Login Dosen</a>
+                    <a href="{{ route('login.lecturer') }}" class="text-blue-600 font-semibold hover:text-blue-700">Login Dosen</a>
                 </p>
             </div>
         </div>
