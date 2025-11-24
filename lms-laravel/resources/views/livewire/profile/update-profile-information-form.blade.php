@@ -10,14 +10,14 @@ new class extends Component
 {
     public string $first_name = '';
     public string $last_name = '';
-    public string $phone_number = ''; // Ubah dari email ke phone_number
+    public string $phone_number = '';
 
     public function mount(): void
     {
         $user = Auth::user();
         $this->first_name = $user->first_name;
         $this->last_name = $user->last_name;
-        $this->phone_number = $user->phone_number; // Ambil data no hp
+        $this->phone_number = $user->phone_number ?? '';
     }
 
     public function updateProfileInformation(): void
