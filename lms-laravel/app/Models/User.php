@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Mail\ResetPasswordMail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * @property int $id
@@ -29,7 +33,8 @@ use Illuminate\Notifications\Notifiable;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    // Tambahan: Masukkan trait MassPrunable di sini
+    use HasFactory, MassPrunable, Notifiable;
 
     protected $fillable = [
         'first_name',
@@ -81,5 +86,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function enrolledClasses(): BelongsToMany
     {
         return $this->belongsToMany(CourseClass::class, 'enrollments', 'user_id', 'course_class_id');
+    }
+
+    public function prunable(): Builder
+    {
+        return static::query()
+            ->whereNull('email_verified_at')
+            ->where('created_at', '<=', now()->subMinutes(5));
+    }
+
+    /**
+     * OVERRIDE: Kirim notifikasi reset password menggunakan Custom Mailable.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        // Kita kirim email menggunakan class ResetPasswordMail yang baru kita buat
+        Mail::to($this->email)->send(new ResetPasswordMail($token, $this->email));
     }
 }

@@ -8,31 +8,36 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class LecturerCredentials extends Mailable
+class ResetPasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(
-        public array $data, // Akan berisi 'lecturer_code' DAN 'otp_code'
-    ) {}
+    public $url;
+
+    public $email;
+
+    public function __construct($token, $email)
+    {
+        $this->email = $email;
+        $this->url = route('password.reset', [
+            'token' => $token,
+            'email' => $email,
+        ]);
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Konfirmasi Pendaftaran Dosen & Kode OTP',
+            subject: 'Reset Password - Ascend LMS',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.lecturer-credentials',
+            markdown: 'mail.auth.reset-password',
             with: [
-                'lecturerCode' => $this->data['lecturer_code'] ?? 'N/A',
-                'otpCode' => $this->data['otp_code'] ?? 'N/A',
+                'url' => $this->url,
             ],
         );
     }

@@ -16,6 +16,8 @@ class LMSPolicy extends Basic
                 Keyword::SELF,
                 'https://cloudflareinsights.com',
                 'https://*.cloudflare.com',
+                'https://www.google.com',
+                'https://www.gstatic.com',
             ])
             ->addDirective(Directive::DEFAULT, Keyword::SELF)
             ->addDirective(Directive::FORM_ACTION, Keyword::SELF)
@@ -35,15 +37,24 @@ class LMSPolicy extends Basic
                 'https://*.cloudflare.com',
                 'https://cdn.jsdelivr.net',
                 'https://unpkg.com',
+                'https://www.google.com',
+                'https://www.gstatic.com',
             ])
             ->addDirective(Directive::STYLE, [
                 Keyword::SELF,
                 Keyword::UNSAFE_INLINE,
                 'https://cdn.jsdelivr.net',
+                'https://fonts.googleapis.com',
             ])
             ->addDirective(Directive::FONT, [
                 Keyword::SELF,
                 'data:',
+                'https://fonts.gstatic.com',
+            ])
+            ->addDirective(Directive::FRAME, [
+                Keyword::SELF,
+                'https://www.google.com',
+                'https://recaptcha.google.com',
             ]);
     }
 }

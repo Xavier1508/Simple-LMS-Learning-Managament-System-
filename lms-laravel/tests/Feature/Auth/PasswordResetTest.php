@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Password;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
@@ -26,9 +27,13 @@ class PasswordResetTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Pastikan pakai set('email') karena di komponen propertinya $email
+        Http::fake([
+            'https://www.google.com/recaptcha/api/siteverify' => Http::response(['success' => true, 'score' => 0.9], 200),
+        ]);
+
         Volt::test('pages.auth.forgot-password')
             ->set('email', $user->email)
+            ->set('recaptchaToken', 'dummy-token-for-testing')
             ->call('sendPasswordResetLink')
             ->assertHasNoErrors();
     }

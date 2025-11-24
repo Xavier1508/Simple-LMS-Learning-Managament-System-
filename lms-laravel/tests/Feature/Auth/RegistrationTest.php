@@ -22,20 +22,21 @@ class RegistrationTest extends TestCase
     public function test_new_users_can_register_step_one(): void
     {
         $component = Volt::test('pages.auth.register')
-            ->set('first_name', 'Test')      // GANTI: name -> first_name
-            ->set('last_name', 'User')       // TAMBAH: last_name
+            ->set('first_name', 'Test')
+            ->set('last_name', 'User')
             ->set('email', 'test@example.com')
+            ->set('phone_number', '081234567890')
             ->set('password', 'password')
             ->set('password_confirmation', 'password');
 
         $component->call('register');
         $component->assertHasNoErrors();
 
-        // Cek apakah user berhasil dibuat di database
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
             'first_name' => 'Test',
             'last_name' => 'User',
+            'phone_number' => '081234567890',
         ]);
     }
 }

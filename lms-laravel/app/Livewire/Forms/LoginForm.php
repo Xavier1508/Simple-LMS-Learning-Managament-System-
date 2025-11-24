@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Livewire\Traits\Recaptcha\WithRecaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -12,6 +13,8 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
+    use WithRecaptcha;
+
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -28,21 +31,19 @@ class LoginForm extends Form
      */
     public function authenticate(string $expectedRole): void
     {
+        $this->verifyRecaptcha('login_student');
+
         $this->ensureIsNotRateLimited();
 
-        // 1. Siapkan Kredensial dasar
         $credentials = [
             'email' => $this->email,
             'password' => $this->password,
         ];
 
-        // 2. Tambahkan syarat Role agar Siswa tidak bisa login di form Dosen (dan sebaliknya)
         if ($expectedRole) {
             $credentials['role'] = $expectedRole;
         }
 
-        // 3. Coba Login Standar Laravel
-        // Auth::attempt akan otomatis mengecek hash password dan role di database
         if (! Auth::attempt($credentials, $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
@@ -50,8 +51,6 @@ class LoginForm extends Form
                 'form.email' => trans('auth.failed'),
             ]);
         }
-
-        // 4. Jika berhasil login, bersihkan limit percobaan
         RateLimiter::clear($this->throttleKey());
     }
 
