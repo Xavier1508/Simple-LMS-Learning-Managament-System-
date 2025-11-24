@@ -12,7 +12,7 @@ class EnsureSecurityHeaders
     {
         $response = $next($request);
 
-        if (!method_exists($response, 'headers')) {
+        if (! method_exists($response, 'headers')) {
             return $response;
         }
         // Memaksa browser menggunakan HTTPS.
