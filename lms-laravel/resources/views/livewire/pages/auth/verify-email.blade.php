@@ -20,40 +20,40 @@ new #[Layout('layouts.guest')] class extends Component
             return;
         }
 
+        if (!Auth::check()) {
+            $this->redirect(route('login'), navigate: true);
+            return;
+        }
+
+        if (Auth::user()->hasVerifiedEmail()) {
+            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+            return;
+        }
         // CATATAN: Auto-send dihapus di sini untuk mencegah spam saat refresh.
         // Pengiriman sudah ditangani oleh LoginForm saat login, atau tombol Resend di bawah.
     }
 
-    /**
-     * SATPAM CHECKER:
-     * Mengecek status verifikasi DAN umur akun.
-     */
     public function checkStatus(Logout $logout): void
     {
         $user = Auth::user()->fresh();
 
-        // 1. Cek User Exist (Jaga-jaga kalau dihapus scheduler duluan)
         if (!$user) {
             $logout();
             $this->js("alert('Sesi tidak valid.'); window.location.href = '/';");
             return;
         }
 
-        // 2. Cek Verified
         if ($user->hasVerifiedEmail()) {
             $this->isVerified = true;
             return;
         }
 
-        // 3. HARD EXPIRATION CHECK (5 Menit / 300 Detik)
-        // Jika akun dibuat > 5 menit lalu dan belum verified -> HAPUS PERMANEN
         $lifespan = $user->created_at->diffInSeconds(Carbon::now());
 
         if ($lifespan > 300) { // 300 detik = 5 menit
             $user->delete(); // Hapus User dari DB
             $logout();       // Logout Session
 
-            // Kirim perintah JS untuk alert dan redirect paksa
             $this->js("
                 alert('KEAMANAN: Waktu verifikasi habis (Batas 5 Menit).\\n\\nAkun Anda telah dihapus otomatis dari sistem demi keamanan.\\nSilakan lakukan registrasi ulang.');
                 window.location.href = '/';
@@ -188,7 +188,7 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="p-8 md:p-10 space-y-6">
             <div class="text-center">
                 <p class="text-gray-600 leading-relaxed">
-                    Link verifikasi telah dikirim ke email <strong>{{ Auth::user()->email }}</strong>.
+                    Link verifikasi telah dikirim ke email <strong>{{ Auth::user()?->email }}</strong>.
                 </p>
 
                 {{-- TIMER ALERT --}}
