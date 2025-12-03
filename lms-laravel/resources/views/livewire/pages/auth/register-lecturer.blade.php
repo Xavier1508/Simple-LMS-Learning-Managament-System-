@@ -62,13 +62,41 @@ new #[Layout('layouts.guest')] class extends Component
     public function register(): void
     {
         if ($this->register_step === 1) {
-            // 1. Verifikasi Recaptcha v3 (Action: register_lecturer)
             $this->verifyRecaptcha('register_lecturer');
 
             $validated = $this->validate([
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+                'email' => [
+                    'required',
+                    'string',
+                    'lowercase',
+                    'email:rfc,dns',
+                    'max:255',
+                    'unique:'.User::class,
+                    function ($attribute, $value, $fail) {
+                        $allowedDomains = [
+                            'gmail.com',
+                            'yahoo.com',
+                            'yahoo.co.id',
+                            'outlook.com',
+                            'icloud.com',
+                            'hotmail.com',
+                            // Domain Kampus & Dosen
+                            'up.ac.id',
+                            'student.up.ac.id',
+                            'binus.ac.id',
+                            'binus.edu'
+                        ];
+
+                        $domain = substr(strrchr($value, "@"), 1);
+
+                        if (!in_array($domain, $allowedDomains)) {
+                            $fail('Temporary email domain detected atau email tidak dikenali. Harap gunakan Email Resmi Instansi atau domain email yang terpercaya.');
+                        }
+                    },
+                ],
+
                 'phone_number' => ['required', 'string', 'max:15'],
                 'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             ]);

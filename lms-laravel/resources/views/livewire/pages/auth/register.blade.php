@@ -43,12 +43,40 @@ new #[Layout('layouts.guest')] class extends Component
             $validated = $this->validate([
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+                'email' => [
+                    'required',
+                    'string',
+                    'lowercase',
+                    'email:rfc,dns',
+                    'max:255',
+                    'unique:'.User::class,
+                    function ($attribute, $value, $fail) {
+                        $allowedDomains = [
+                            'gmail.com',
+                            'yahoo.com',
+                            'yahoo.co.id',
+                            'outlook.com',
+                            'icloud.com',
+                            'hotmail.com',
+                            // Masukkan domain kampus kamu di sini:
+                            'student.up.ac.id',
+                            'up.ac.id',
+                            'binus.ac.id'
+                        ];
+
+                        $domain = substr(strrchr($value, "@"), 1);
+
+                        if (!in_array($domain, $allowedDomains)) {
+                            $fail('Temporary email domain detected atau email tidak dikenali. Harap gunakan Email Resmi Instansi atau domain email yang terpercaya.');
+                        }
+                    },
+                ],
+
                 'phone_number' => ['required', 'string', 'max:15'],
                 'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             ]);
 
-            $otp = $this->generateOtp();
+$otp = $this->generateOtp();
 
             User::create([
                 'first_name' => $validated['first_name'],
@@ -240,7 +268,8 @@ new #[Layout('layouts.guest')] class extends Component
                     {{-- Button Step 1 (Trigger Submit Alpine) --}}
                     <button type="submit"
                             class="w-full bg-orange-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-orange-700 transition duration-150 shadow-md shadow-orange-300/50 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                            x-bind:disabled="loading">
+                            x-bind:disabled="loading"
+                            wire:loading.attr="disabled">
 
                         <span x-show="!loading" class="flex items-center gap-2">
                             Lanjutkan & Kirim OTP <x-heroicon-m-arrow-right class="w-5 h-5" />
