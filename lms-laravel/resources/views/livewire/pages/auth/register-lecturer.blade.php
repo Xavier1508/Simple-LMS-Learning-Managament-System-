@@ -31,9 +31,21 @@ new #[Layout('layouts.guest')] class extends Component
         $day = now()->format('d');
         $month = now()->format('m');
         $year = now()->format('y');
-        $firstInitial = strtoupper(substr($firstName, 0, 1));
-        $lastInitial = strtoupper(substr($lastName, -1, 1));
-        return "LEC{$day}{$month}{$year}{$firstInitial}{$lastInitial}";
+
+        $rawFirst = substr($firstName, 0, 1);
+        $rawLast = substr($lastName, -1, 1);
+        $firstInitial = rand(0, 1) ? strtoupper($rawFirst) : strtolower($rawFirst);
+        $lastInitial = rand(0, 1) ? strtoupper($rawLast) : strtolower($rawLast);
+        $prefix = "LEC{$day}{$month}{$year}{$firstInitial}{$lastInitial}";
+
+        do {
+            $randomSuffix = Str::random(3);
+
+            $code = $prefix . $randomSuffix;
+
+        } while (User::where('lecturer_code', $code)->exists());
+
+        return $code;
     }
 
     private function generatePrivateNumber(): string { return Str::random(16); }
@@ -266,7 +278,8 @@ new #[Layout('layouts.guest')] class extends Component
                     {{-- Button Step 1 (Trigger Submit Alpine) --}}
                     <button type="submit"
                             class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition duration-150 shadow-md shadow-blue-300/50 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                            x-bind:disabled="loading">
+                            x-bind:disabled="loading"
+                            wire:loading.attr="disabled">
 
                         <span x-show="!loading" class="flex items-center gap-2">
                             Lanjut & Dapatkan Kode <x-heroicon-m-arrow-right class="w-5 h-5" />
