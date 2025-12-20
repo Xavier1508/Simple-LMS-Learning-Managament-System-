@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-// GROUP TAMU (GUEST) - User belum login
 Route::middleware('guest')->group(function () {
 
     // --- Authentication Mahasiswa ---

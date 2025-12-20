@@ -13,7 +13,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class AssessmentManager extends Component
 {
-    public string $filter = 'upcoming'; // 'upcoming', 'history'
+    public string $filter = 'upcoming';
 
     public function setFilter(string $filter): void
     {
@@ -40,7 +40,7 @@ class AssessmentManager extends Component
         // 2. Query Assignment
         $query = Assignment::whereIn('course_class_id', $classIds)
             ->with(['class.course', 'submissions' => function ($q) use ($user) {
-                $q->where('user_id', $user->id); // Eager load submission user ini saja
+                $q->where('user_id', $user->id);
             }]);
 
         // 3. Filter Logic

@@ -14,13 +14,15 @@ use App\Livewire\Traits\Recaptcha\WithRecaptcha;
 new #[Layout('layouts.guest')] class extends Component
 {
     use WithRecaptcha;
-
     public string $first_name = '';
     public string $last_name = '';
     public string $email = '';
     public string $phone_number = '';
     public string $password = '';
     public string $password_confirmation = '';
+
+    public string $country_code = '+62';
+    public string $phone_input = '';
 
     public int $register_step = 1;
     public string $otp_code = '';
@@ -64,41 +66,30 @@ new #[Layout('layouts.guest')] class extends Component
         if ($this->register_step === 1) {
             $this->verifyRecaptcha('register_lecturer');
 
+            // GABUNGKAN KODE NEGARA + NOMOR TELEPON
+            // Hapus angka 0 di depan jika user mengetik 0812...
+            $cleanPhone = ltrim($this->phone_input, '0');
+            $fullPhoneNumber = $this->country_code . $cleanPhone;
+
+            // Masukkan ke property phone_number untuk validasi final
+            $this->phone_number = $fullPhoneNumber;
+
             $validated = $this->validate([
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'email' => [
-                    'required',
-                    'string',
-                    'lowercase',
-                    'email:rfc,dns',
-                    'max:255',
-                    'unique:'.User::class,
+                    'required', 'string', 'lowercase', 'email:rfc,dns', 'max:255', 'unique:'.User::class,
                     function ($attribute, $value, $fail) {
-                        $allowedDomains = [
-                            'gmail.com',
-                            'yahoo.com',
-                            'yahoo.co.id',
-                            'outlook.com',
-                            'icloud.com',
-                            'hotmail.com',
-                            // Domain Kampus & Dosen
-                            'up.ac.id',
-                            'student.up.ac.id',
-                            'binus.ac.id',
-                            'binus.edu'
-                        ];
-
-                        $domain = substr(strrchr($value, "@"), 1);
-
-                        if (!in_array($domain, $allowedDomains)) {
-                            $fail('Temporary email domain detected atau email tidak dikenali. Harap gunakan Email Resmi Instansi atau domain email yang terpercaya.');
-                        }
-                    },
+                        $allowed = ['gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com', 'icloud.com', 'hotmail.com', 'up.ac.id', 'student.up.ac.id', 'binus.ac.id', 'binus.edu'];
+                        if (!in_array(substr(strrchr($value, "@"), 1), $allowed)) $fail('Domain email tidak dikenali.');
+                    }
                 ],
-
-                'phone_number' => ['required', 'string', 'max:15'],
+                // Validasi Khusus Nomor Telepon (E.164 Format)
+                'phone_input' => ['required', 'numeric'],
+                'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+(?:[0-9] ?){6,14}[0-9]$/'],
                 'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            ], [
+                'phone_number.regex' => 'Format nomor telepon tidak valid untuk negara yang dipilih.',
             ]);
 
             $code = $this->generateLecturerCode($validated['first_name'], $validated['last_name']);
@@ -109,7 +100,7 @@ new #[Layout('layouts.guest')] class extends Component
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
-                'phone_number' => $validated['phone_number'],
+                'phone_number' => $fullPhoneNumber, // Simpan nomor yang sudah digabung
                 'password' => Hash::make($validated['password']),
                 'role' => 'lecturer',
                 'lecturer_code' => $code,
@@ -118,38 +109,19 @@ new #[Layout('layouts.guest')] class extends Component
                 'otp_expires_at' => Carbon::now()->addSeconds(90),
             ]);
 
-            Mail::to($this->email)->send(new LecturerCredentials([
-                'lecturer_code' => $code,
-                'otp_code' => $otp
-            ]));
-
-            session()->flash('lecturer_registered', [
-                'email' => $this->email,
-                'lecturer_code' => $code
-            ]);
+            Mail::to($this->email)->send(new LecturerCredentials(['lecturer_code' => $code, 'otp_code' => $otp]));
 
             session()->flash('otp-sent', 'Kode Dosen dan OTP telah dikirim ke email Anda.');
             $this->register_step = 2;
         }
         elseif ($this->register_step === 2) {
             $this->validate(['otp_code' => 'required|string|size:9']);
-
-            if (!$this->user) {
-                 $this->user = User::where('email', $this->email)->first();
-            }
-
-            if (!$this->user || $this->user->otp_code !== $this->otp_code) {
-                $this->addError('otp_code', 'Kode OTP salah.');
-                return;
-            }
-
-            if (Carbon::now()->isAfter($this->user->otp_expires_at)) {
-                $this->addError('otp_code', 'Kode OTP kedaluwarsa. Silakan daftar ulang.');
-                return;
-            }
+            if (!$this->user) $this->user = User::where('email', $this->email)->first();
+            if (!$this->user || $this->user->otp_code !== $this->otp_code) { $this->addError('otp_code', 'Kode OTP salah.'); return; }
+            if (Carbon::now()->isAfter($this->user->otp_expires_at)) { $this->addError('otp_code', 'Kedaluwarsa.'); return; }
 
             $this->user->forceFill(['otp_code' => null, 'otp_expires_at' => null])->save();
-            $this->redirect(route('register.lecturer.success'), navigate: true);
+            $this->redirect(route('login.lecturer'), navigate: true);
         }
     }
 
@@ -202,6 +174,8 @@ new #[Layout('layouts.guest')] class extends Component
                   wire:ignore.self
                   x-data="{
                       loading: false,
+                      showPass: false,
+                      showPassConf: false,
                       submitLecturerReg() {
                           if ({{ $register_step }} !== 1) return;
 
@@ -260,15 +234,78 @@ new #[Layout('layouts.guest')] class extends Component
                         @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    <div>
-                        <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <x-heroicon-o-phone class="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input type="text" id="phone_number" wire:model="phone_number" placeholder="0812..." required
-                                   class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+                    <div x-data="{
+                        countries: [
+                            { code: 'ID', name: 'Indonesia', dial: '+62', flag: '🇮🇩' },
+                            { code: 'US', name: 'United States', dial: '+1', flag: '🇺🇸' },
+                            { code: 'GB', name: 'United Kingdom', dial: '+44', flag: '🇬🇧' },
+                            { code: 'MY', name: 'Malaysia', dial: '+60', flag: '🇲🇾' },
+                            { code: 'SG', name: 'Singapore', dial: '+65', flag: '🇸🇬' },
+                            { code: 'AU', name: 'Australia', dial: '+61', flag: '🇦🇺' },
+                            { code: 'JP', name: 'Japan', dial: '+81', flag: '🇯🇵' },
+                            { code: 'CN', name: 'China', dial: '+86', flag: '🇨🇳' },
+                        ],
+                        selectedCountry: { code: 'ID', name: 'Indonesia', dial: '+62', flag: '🇮🇩' },
+                        showDropdown: false,
+                        toggleDropdown() { this.showDropdown = !this.showDropdown },
+                        selectCountry(country) {
+                            this.selectedCountry = country;
+                            this.showDropdown = false;
+                            @this.set('country_code', country.dial);
+                        },
+                        init() { @this.set('country_code', '+62'); }
+                    }" class="relative">
+
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+
+                        <div class="relative flex rounded-lg shadow-sm group">
+                            {{-- TOMBOL DROPDOWN --}}
+                            <button type="button" @click="toggleDropdown()" @click.away="showDropdown = false"
+                                    class="inline-flex items-center gap-x-2 px-4 py-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-700 font-medium rounded-l-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 min-w-[110px] justify-between z-10">
+                                <div class="flex items-center gap-2">
+                                    <span x-text="selectedCountry.flag" class="text-xl leading-none"></span>
+                                    <span x-text="selectedCountry.dial" class="text-sm"></span>
+                                </div>
+                                <x-heroicon-m-chevron-down class="w-4 h-4 text-gray-400" />
+                            </button>
+
+                            {{-- INPUT NOMOR --}}
+                            <input type="tel" wire:model="phone_input" placeholder="81234567890"
+                                class="block w-full pl-4 p-3 border border-gray-300 rounded-r-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150 relative z-0"
+                                x-on:input="$el.value = $el.value.replace(/[^0-9]/g, '')">
                         </div>
+
+                        {{-- MENU DROPDOWN (POPUP) --}}
+                        <div x-show="showDropdown" style="display: none;"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 top-full mt-1 w-72 bg-white shadow-xl rounded-lg border border-gray-100 py-1 text-sm ring-1 ring-black ring-opacity-5 focus:outline-none z-50 max-h-60 overflow-y-auto">
+
+                            <template x-for="country in countries" :key="country.code">
+                                <div @click="selectCountry(country)"
+                                    class="cursor-pointer select-none relative py-2.5 px-4 hover:bg-blue-50 transition duration-150 flex items-center justify-between group">
+
+                                    <div class="flex items-center gap-3">
+                                        <span x-text="country.flag" class="text-xl"></span>
+                                        <span class="font-medium text-gray-900 group-hover:text-blue-700" x-text="country.name"></span>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-400 text-xs font-mono" x-text="country.dial"></span>
+                                        {{-- Icon Checkmark --}}
+                                        <span x-show="selectedCountry.code === country.code" class="text-blue-600">
+                                            <x-heroicon-s-check class="w-4 h-4" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        @error('phone_input') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         @error('phone_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
@@ -278,20 +315,33 @@ new #[Layout('layouts.guest')] class extends Component
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <x-heroicon-o-lock-closed class="h-5 w-5 text-gray-400" />
                             </div>
-                            <input type="password" id="password" wire:model="password" placeholder="Buat password kuat" required autocomplete="new-password"
-                                   class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+                            <input :type="showPass ? 'text' : 'password'" id="password" wire:model="password" placeholder="Buat password kuat" required autocomplete="new-password"
+                                class="w-full pl-10 pr-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+
+                            <button type="button" @click="showPass = !showPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <x-heroicon-o-eye x-show="!showPass" class="h-5 w-5" />
+                                <x-heroicon-o-eye-slash x-show="showPass" style="display: none;" class="h-5 w-5" />
+                            </button>
                         </div>
+                        {{-- Info Helper Password Rules --}}
+                        <p class="text-[10px] text-gray-500 mt-1">Min 8 karakter, Huruf Besar & Kecil, Angka, Simbol.</p>
                         @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
+                    {{-- Input Confirm Password --}}
                     <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <x-heroicon-o-check-circle class="h-5 w-5 text-gray-400" />
                             </div>
-                            <input type="password" id="password_confirmation" wire:model="password_confirmation" placeholder="Konfirmasi password" required autocomplete="new-password"
-                                   class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+                            <input :type="showPassConf ? 'text' : 'password'" id="password_confirmation" wire:model="password_confirmation" placeholder="Ulangi password" required autocomplete="new-password"
+                                class="w-full pl-10 pr-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+
+                            <button type="button" @click="showPassConf = !showPassConf" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                <x-heroicon-o-eye x-show="!showPassConf" class="h-5 w-5" />
+                                <x-heroicon-o-eye-slash x-show="showPassConf" style="display: none;" class="h-5 w-5" />
+                            </button>
                         </div>
                         @error('password_confirmation') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>

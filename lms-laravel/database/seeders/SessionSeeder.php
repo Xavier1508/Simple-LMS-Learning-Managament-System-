@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\CourseClass;
-use App\Models\CourseSession; // Gunakan Model Baru
+use App\Models\CourseSession;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -18,7 +18,6 @@ class SessionSeeder extends Seeder
                 $startDate = Carbon::now()->startOfWeek()->addDays(1)->setHour(13)->setMinute(0);
 
                 for ($i = 1; $i <= 13; $i++) {
-                    // Gunakan CourseSession::create
                     CourseSession::create([
                         'course_class_id' => $class->id,
                         'title' => "Session $i: Topik Pembahasan Ke-$i",

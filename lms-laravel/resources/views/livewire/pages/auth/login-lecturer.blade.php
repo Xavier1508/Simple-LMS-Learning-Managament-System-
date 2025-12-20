@@ -98,6 +98,8 @@ new #[Layout('layouts.guest')] class extends Component
                   wire:ignore.self
                   x-data="{
                       loading: false,
+                      showPassword: false,
+                      showPrivateNumber: false,
                       submitLecturer() {
                           this.loading = true;
                           const siteKey = '{{ config('services.recaptcha.site_key') }}';
@@ -146,13 +148,18 @@ new #[Layout('layouts.guest')] class extends Component
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <x-heroicon-o-lock-closed class="h-5 w-5 text-gray-400" />
                         </div>
-                        <input type="password" id="password" wire:model="password" placeholder="Masukkan password" required autocomplete="current-password"
-                               class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+                        <input :type="showPassword ? 'text' : 'password'" id="password" wire:model="password" placeholder="Masukkan password" required
+                            class="w-full pl-10 pr-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150">
+
+                        <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <x-heroicon-o-eye x-show="!showPassword" class="h-5 w-5" />
+                            <x-heroicon-o-eye-slash x-show="showPassword" style="display: none;" class="h-5 w-5" />
+                        </button>
                     </div>
                     @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Private Number --}}
+                {{-- Input Private Number --}}
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label for="private_number" class="block text-sm font-medium text-gray-700">Private Number</label>
@@ -162,8 +169,13 @@ new #[Layout('layouts.guest')] class extends Component
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <x-heroicon-o-key class="h-5 w-5 text-gray-400" />
                         </div>
-                        <input type="password" id="private_number" wire:model="private_number" placeholder="Kunci Keamanan Tambahan" required
-                               class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150 font-mono">
+                        <input :type="showPrivateNumber ? 'text' : 'password'" id="private_number" wire:model="private_number" placeholder="Kunci Keamanan Tambahan" required
+                            class="w-full pl-10 pr-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150 font-mono">
+
+                        <button type="button" @click="showPrivateNumber = !showPrivateNumber" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <x-heroicon-o-eye x-show="!showPrivateNumber" class="h-5 w-5" />
+                            <x-heroicon-o-eye-slash x-show="showPrivateNumber" style="display: none;" class="h-5 w-5" />
+                        </button>
                     </div>
                     @error('private_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>

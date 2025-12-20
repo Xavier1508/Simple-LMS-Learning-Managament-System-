@@ -11,7 +11,6 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function login(): void
     {
-        // Validasi dan Verify Recaptcha dipanggil di dalam LoginForm
         $this->form->authenticate(expectedRole: 'student');
 
         Session::regenerate();
@@ -37,6 +36,7 @@ new #[Layout('layouts.guest')] class extends Component
                   wire:ignore.self
                   x-data="{
                       loading: false,
+                      showPassword: false,
                       submitLogin() {
                           this.loading = true;
                           const siteKey = '{{ config('services.recaptcha.site_key') }}';
@@ -86,10 +86,28 @@ new #[Layout('layouts.guest')] class extends Component
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <x-heroicon-o-lock-closed class="h-5 w-5 text-gray-400" />
                         </div>
-                        <input type="password" id="password" wire:model="form.password" placeholder="Masukkan password" required autocomplete="current-password"
-                               class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 outline-none transition duration-150">
+
+                        {{-- Ubah type jadi dinamis pakai Alpine (:type) --}}
+                        <input :type="showPassword ? 'text' : 'password'"
+                            id="password"
+                            wire:model="form.password"
+                            placeholder="Masukkan password"
+                            required
+                            autocomplete="current-password"
+                            class="w-full pl-10 pr-10 p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 outline-none transition duration-150">
+
+                        {{-- Tombol Mata --}}
+                        <button type="button" @click="showPassword = !showPassword"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+
+                            {{-- Icon Mata Terbuka (Show) --}}
+                            <x-heroicon-o-eye x-show="!showPassword" class="h-5 w-5" />
+
+                            {{-- Icon Mata Tertutup (Hide) --}}
+                            <x-heroicon-o-eye-slash x-show="showPassword" style="display: none;" class="h-5 w-5" />
+                        </button>
                     </div>
-                     @error('form.password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('form.password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Error Message Recaptcha (Hidden Logic) --}}

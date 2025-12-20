@@ -16,11 +16,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory()->create([
-            'name' => 'Admin User',
+            'first_name' => 'Admin',
+            'last_name' => 'User',
             'email' => 'admin@example.com',
             'role' => 'admin',
         ]);
-
         $this->call([
             CourseSeeder::class,
         ]);
