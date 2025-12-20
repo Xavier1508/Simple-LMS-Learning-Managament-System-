@@ -15,13 +15,16 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'livewire/*', 'broadcasting/auth'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://ascendlms.xavierrenjiro.site/',
+        'https://ascendlms.xavierrenjiro.site',
         'http://localhost:8000',
+        'http://localhost:8080',
+        'http://127.0.0.1:8000',
+        'http://127.0.0.1:8080',
     ],
 
     'allowed_origins_patterns' => [],

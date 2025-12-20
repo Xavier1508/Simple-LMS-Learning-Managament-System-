@@ -7,7 +7,7 @@ Route::get('/', function () {
     return view('landing');
 })->name('landing');
 
-// ====== SWAGGER / API DOCS ROUTES ======
+// API DOCS ROUTES pake swagger
 Route::get('api/documentation/api-docs.json', function () {
     $file = storage_path('api-docs/api-docs.json');
 
@@ -32,7 +32,6 @@ Route::get('api/documentation/api-docs.yaml', function () {
     ]);
 });
 
-// GROUP UTAMA: Hanya bisa diakses user yang sudah login & verifikasi email
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
@@ -50,15 +49,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('schedule', \App\Livewire\ScheduleManager::class)->name('schedule');
 });
 
-// Include Auth Routes (Route Dosen sekarang ada di sini)
 require __DIR__.'/auth.php';
 
-// FIX CLASS SESSIONS TOOL
 Route::get('/fix-sessions', function () {
     $classes = \App\Models\CourseClass::with('sessions')->get();
 
     foreach ($classes as $class) {
-        // Jika kelas belum punya sesi, buatkan!
         if ($class->sessions->count() == 0) {
             $startDate = \Carbon\Carbon::now()->subWeeks(2)->next('Monday')->setTime(10, 0); // Mulai dari 2 minggu lalu
 

@@ -70,7 +70,6 @@ new #[Layout('layouts.guest')] class extends Component
 
             $cleanPhone = ltrim($this->phone_input, '0');
             $fullPhoneNumber = $this->country_code . $cleanPhone;
-
             $this->phone_number = $fullPhoneNumber;
 
             $validated = $this->validate([
@@ -83,19 +82,18 @@ new #[Layout('layouts.guest')] class extends Component
                         if (!in_array(substr(strrchr($value, "@"), 1), $allowed)) $fail('Domain email tidak dikenali.');
                     }
                 ],
-                // Validasi Khusus Nomor Telepon (E.164 Format)
                 'phone_input' => ['required', 'numeric'],
                 'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+(?:[0-9] ?){6,14}[0-9]$/'],
                 'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             ], [
-                'phone_number.regex' => 'Format nomor telepon tidak valid untuk negara yang dipilih.',
+                'phone_number.regex' => 'Format nomor telepon tidak valid.',
             ]);
 
             $code = $this->generateLecturerCode($validated['first_name'], $validated['last_name']);
             $privateNumber = $this->generatePrivateNumber();
             $otp = $this->generateOtp();
 
-            $this->user = User::create([
+            User::forceCreate([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],

@@ -27,7 +27,7 @@ return [
      *
      * Available Value: 'on', 'off'
      */
-    'x-dns-prefetch-control' => '',
+    'x-dns-prefetch-control' => 'off',
 
     /**
      * X-Download-Options
@@ -77,7 +77,7 @@ return [
      *
      * Available Value: '1', '0', '1; mode=block'
      */
-    'x-xss-protection' => '',
+    'x-xss-protection' => '1; mode=block',
 
     /**
      * Referrer-Policy
@@ -87,7 +87,7 @@ return [
      * Available Value: 'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
      *                  'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url'
      */
-    'referrer-policy' => 'no-referrer',
+    'referrer-policy' => 'strict-origin-when-cross-origin',
 
     /**
      * Cross-Origin-Embedder-Policy
@@ -123,17 +123,11 @@ return [
      */
     'clear-site-data' => [
         'enable' => false,
-
         'all' => false,
-
         'cache' => true,
-
         'clientHints' => true,
-
         'cookies' => true,
-
         'storage' => true,
-
         'executionContexts' => true,
     ],
 
@@ -146,11 +140,8 @@ return [
      */
     'hsts' => [
         'enable' => true,
-
         'max-age' => 31536000,
-
         'include-sub-domains' => true,
-
         'preload' => true,
     ],
 

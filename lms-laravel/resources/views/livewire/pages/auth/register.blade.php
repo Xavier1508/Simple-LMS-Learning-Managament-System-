@@ -46,19 +46,13 @@ new #[Layout('layouts.guest')] class extends Component
 
             $cleanPhone = ltrim($this->phone_input, '0');
             $fullPhoneNumber = $this->country_code . $cleanPhone;
-
             $this->phone_number = $fullPhoneNumber;
 
             $validated = $this->validate([
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'email' => [
-                    'required',
-                    'string',
-                    'lowercase',
-                    'email:rfc,dns',
-                    'max:255',
-                    'unique:'.User::class,
+                    'required', 'string', 'lowercase', 'email:rfc,dns', 'max:255', 'unique:'.User::class,
                     function ($attribute, $value, $fail) {
                         $allowedDomains = [
                             'gmail.com', 'yahoo.com', 'yahoo.co.id', 'outlook.com',
@@ -67,21 +61,20 @@ new #[Layout('layouts.guest')] class extends Component
                         ];
                         $domain = substr(strrchr($value, "@"), 1);
                         if (!in_array($domain, $allowedDomains)) {
-                            $fail('Email domain tidak dikenali. Harap gunakan email resmi atau terpercaya.');
+                            $fail('Email domain tidak dikenali.');
                         }
                     },
                 ],
-                // Validasi Khusus Nomor Telepon (E.164 Format)
                 'phone_input' => ['required', 'numeric'],
                 'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+(?:[0-9] ?){6,14}[0-9]$/'],
                 'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             ], [
-                'phone_number.regex' => 'Format nomor telepon tidak valid untuk negara yang dipilih.',
+                'phone_number.regex' => 'Format nomor telepon tidak valid.',
             ]);
 
             $otp = $this->generateOtp();
 
-            User::create([
+            User::forceCreate([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
@@ -99,24 +92,11 @@ new #[Layout('layouts.guest')] class extends Component
         }
         elseif ($this->register_step === 2) {
             $this->validate(['otp_code' => 'required|string|size:9']);
-
             $user = User::where('email', $this->email)->first();
 
-            if (!$user) {
-                $this->addError('otp_code', 'User tidak ditemukan. Silakan daftar ulang.');
-                return;
-            }
-
-            if (trim($user->otp_code) !== trim($this->otp_code)) {
-                $this->addError('otp_code', 'Kode OTP salah.');
-                return;
-            }
-
-            if (Carbon::now()->isAfter($user->otp_expires_at)) {
-                $this->addError('otp_code', 'Kode OTP kedaluwarsa. Silakan kirim ulang.');
-                return;
-            }
-
+            if (!$user) { $this->addError('otp_code', 'User tidak ditemukan.'); return; }
+            if (trim($user->otp_code) !== trim($this->otp_code)) { $this->addError('otp_code', 'Kode OTP salah.'); return; }
+            if (Carbon::now()->isAfter($user->otp_expires_at)) { $this->addError('otp_code', 'Kedaluwarsa.'); return; }
             $user->forceFill(['otp_code' => null, 'otp_expires_at' => null])->save();
 
             session()->flash('status', 'Registrasi berhasil! Silakan login.');
