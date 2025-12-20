@@ -28,7 +28,7 @@ services:
     depends_on:
       - app
 
-  # 3. Database (MySQL)
+  # Database (MySQL)
   db:
     image: mysql:8.0
     container_name: lms_db
