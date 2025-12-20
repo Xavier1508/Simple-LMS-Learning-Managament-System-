@@ -15,7 +15,6 @@
         <button
             wire:click="setActiveSession({{ $session->id }})"
             class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition duration-150 border
-            {{-- PERBAIKAN: Menambahkan 'cursor-default' pada state aktif agar UX lebih jelas --}}
             {{ $activeSessionId == $session->id
                 ? 'bg-orange-500 text-white shadow-lg border-orange-500 cursor-default'
                 : 'bg-gray-200 text-gray-600 hover:bg-gray-300 border-transparent'
@@ -67,11 +66,7 @@
         @foreach($class->sessions as $session)
             @if($activeSessionId == $session->id)
                 @php
-                    // Ambil record attendance user (jika ada)
                     $myRecord = $session->attendances->where('user_id', Auth::id())->first();
-
-                    // Pastikan method getStatusDisplay ada di Controller atau trait WithAttendance
-                    // Jika method ini ada di controller Livewire, panggil via $this
                     $statusData = method_exists($this, 'getStatusDisplay')
                         ? $this->getStatusDisplay($session, $myRecord)
                         : ['type' => 'default', 'label' => 'Check Status'];

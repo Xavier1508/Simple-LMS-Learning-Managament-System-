@@ -6,7 +6,6 @@
     <title>{{ config('app.name', 'Ascend LMS') }} - Elevate Your Learning</title>
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 
-    {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -27,7 +26,6 @@
                 {{-- Logo & Brand --}}
                 <div class="flex items-center">
                     <a href="/" class="flex items-center gap-3 group">
-                        {{-- PERBAIKAN: Menggunakan h-10 w-auto agar proporsional & object-contain agar tidak gepeng --}}
                         <img src="{{ asset('favicon.png') }}"
                              alt="Ascend LMS Logo"
                              class="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-110">
@@ -111,7 +109,6 @@
                 {{-- Brand Section --}}
                 <div class="md:col-span-2">
                     <div class="flex items-center gap-2 mb-4">
-                        {{-- PERBAIKAN: Menggunakan h-8 w-auto object-contain untuk footer --}}
                         <img src="{{ asset('favicon.png') }}" alt="Logo" class="h-8 w-auto object-contain brightness-200">
                         <span class="text-xl font-bold text-white">Ascend LMS</span>
                     </div>
@@ -178,7 +175,6 @@
             menu.classList.toggle('hidden');
         });
 
-        // Close mobile menu when clicking menu links
         document.querySelectorAll('#mobile-menu a').forEach(link => {
             link.addEventListener('click', function() {
                 document.getElementById('mobile-menu').classList.add('hidden');

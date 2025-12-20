@@ -16,9 +16,8 @@
 
     {{-- Assessment Grid --}}
     @php
-        // Ambil assignment milik kelas ini
         $assignments = \App\Models\Assignment::where('course_class_id', $courseClassId)
-            ->orderBy('due_date', 'desc') // Yang deadline paling dekat/baru di atas
+            ->orderBy('due_date', 'desc')
             ->get();
     @endphp
 
@@ -26,13 +25,11 @@
         @forelse($assignments as $assess)
             @php
                 $isOverdue = $assess->isOverdue();
-                // Cek status submission siswa login
                 $mySubmission = null;
                 if(Auth::user()->role === 'student') {
                     $mySubmission = $assess->submissions->where('user_id', Auth::id())->first();
                 }
 
-                // Status Logic
                 $statusColor = 'gray';
                 $statusText = 'Assigned';
                 $progress = 0;
@@ -42,7 +39,7 @@
                     $statusText = 'Submitted';
                     $progress = 100;
                     if($mySubmission->status === 'late') {
-                        $statusColor = 'yellow'; // Tetap hijau tapi indikasi late
+                        $statusColor = 'yellow';
                         $statusText = 'Submitted Late';
                     }
                 } elseif ($isOverdue) {
@@ -92,7 +89,7 @@
                         </div>
                     </div>
                 @else
-                    {{-- Footer Dosen (Statistik Singkat) --}}
+                    {{-- Footer Dosen --}}
                     <div class="bg-gray-50 p-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
                         <span>{{ $assess->submissions->count() }} Submission(s)</span>
                         <span class="text-orange-600 font-bold hover:underline">View Details &rarr;</span>

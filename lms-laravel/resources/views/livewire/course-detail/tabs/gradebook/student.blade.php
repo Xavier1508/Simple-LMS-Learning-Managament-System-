@@ -1,5 +1,4 @@
 @php
-    // Hitung nilai real-time
     $calc = $this->calculateTotalScore(Auth::id(), $class->course_id);
     $finalScore = $calc['score'];
     $gradeLetter = $this->getGradeLetter($finalScore);
@@ -7,7 +6,6 @@
 @endphp
 
 <div>
-    {{-- HEADER SUMMARY (MIRIP BINUSMAYA) --}}
     <div class="bg-indigo-600 rounded-xl shadow-lg text-white p-6 mb-8 flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
         <div class="relative z-10">
             <h2 class="text-2xl font-bold">Final Score</h2>
@@ -28,12 +26,10 @@
                 <p class="text-4xl font-extrabold">{{ $finalScore > 0 ? $gradeLetter : '-' }}</p>
             </div>
         </div>
-
-        {{-- Decor --}}
         <div class="absolute right-0 top-0 h-full w-1/3 bg-white/5 skew-x-12"></div>
     </div>
 
-    {{-- COMPONENT LIST (CLEAN TABLE) --}}
+    {{-- COMPONENT LIST --}}
     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div class="divide-y divide-gray-100">
             @foreach($components as $comp)

@@ -3,7 +3,6 @@
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold text-gray-800">Student Grades</h2>
         <div class="flex items-center gap-2">
-             {{-- Pastikan $class ada. Jika dari CourseDetail, ini harusnya aman --}}
              <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Total Students: {{ $class->students->count() }}</span>
         </div>
     </div>
@@ -12,8 +11,6 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @foreach($class->students as $student)
             @php
-                // PERBAIKAN: Pastikan akses $class->course_id aman
-                // Gunakan $this->courseClassId jika $class bermasalah di scope PHP murni
                 $currentCourseId = $class->course_id;
 
                 $calc = $this->calculateTotalScore($student->id, $currentCourseId);

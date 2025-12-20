@@ -1,6 +1,4 @@
 <div class="space-y-8 animate-fade-in">
-
-    {{-- ATTENDANCE STATISTICS SUMMARY (MODIFIED) --}}
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm mt-4">
         <div class="bg-amber-600 px-6 py-3">
             <div class="flex items-center gap-2 text-white">
@@ -17,7 +15,6 @@
 
         <div class="p-6">
             @if(Auth::user()->role === 'student')
-                {{-- TAMPILAN SUMMARY SISWA (TETAP SAMA) --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-x divide-gray-100">
                     <div>
                         <p class="text-gray-500 text-sm mb-1">Total Session</p>
@@ -35,8 +32,6 @@
             @else
                 {{-- TAMPILAN SUMMARY DOSEN (BARU - SESUAI REQUEST) --}}
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-                    {{-- KIRI: Total Students (Besar) --}}
                     <div class="lg:col-span-1 flex flex-col justify-center items-center text-center border-r border-gray-100">
                         <div class="p-4 bg-orange-50 rounded-full mb-3">
                             <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -94,7 +89,6 @@
         </div>
     </div>
 
-    {{-- STUDENT VIEW: VERTICAL LIST (PERBAIKAN ICON X CANCELLED) --}}
     @if(Auth::user()->role === 'student')
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <table class="w-full text-left border-collapse">

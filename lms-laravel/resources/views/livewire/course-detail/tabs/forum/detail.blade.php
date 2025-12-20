@@ -122,7 +122,6 @@
         {{-- Comments List --}}
         <div class="space-y-4">
             @php
-                // Logic Query Reply (Hidden/Normal)
                 $postsQuery = $thread->posts()->with('user')->latest();
                 $posts = $postsQuery->get();
             @endphp
@@ -132,7 +131,6 @@
                 @php
                     $isVisible = true;
                     if ($thread->is_hidden && Auth::user()->role === 'student') {
-                        // Siswa hanya bisa lihat punya sendiri ATAU punya Dosen
                         if ($post->user_id !== Auth::id() && $post->user->role !== 'lecturer') {
                             $isVisible = false;
                         }

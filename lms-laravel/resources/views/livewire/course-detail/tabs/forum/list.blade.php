@@ -2,8 +2,6 @@
     {{-- SESSION NAVIGATION --}}
     <div class="flex space-x-2 pb-4 mb-5 mt-4 overflow-x-auto">
         @foreach($class->sessions as $session)
-            {{-- [PERBAIKAN] wire:click sekarang memanggil setActiveSession --}}
-            {{-- Logic button: Jika aktif, dia Active. Jika diklik lagi, dia TETAP Active (karena logic PHP sudah diperbaiki) --}}
             <button
                 wire:click="setActiveSession({{ $session->id }})"
                 class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition duration-150 border
@@ -17,13 +15,9 @@
     </div>
 
     @php
-        // Logic Data Fetching
         $safeSessionId = $activeSessionId ?? null;
 
-        // Cari session object berdasarkan ID yang aktif
         $currentSession = $class->sessions->firstWhere('id', $safeSessionId);
-
-        // Safety check: Jika entah kenapa null (misal baru load), ambil sesi pertama
         if (!$currentSession && $class->sessions->count() > 0) {
             $currentSession = $class->sessions->first();
             $safeSessionId = $currentSession->id;
@@ -32,7 +26,6 @@
         $grandTotalPost = 0;
         $totalThreads = 0;
 
-        // Hitung statistik post hanya jika ada session valid
         if ($safeSessionId) {
             $totalThreads = \App\Models\ForumThread::where('course_session_id', $safeSessionId)->count();
 

@@ -1,5 +1,4 @@
 <div class="animate-fade-in min-h-screen">
-
     {{-- HEADER & TOOLBAR --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
@@ -9,7 +8,7 @@
 
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
 
-            {{-- 1. LOCAL SEARCH (Untuk mencari orang di list) --}}
+            {{-- LOCAL SEARCH (Untuk mencari orang di list) --}}
             <div class="relative w-full md:w-64">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -21,7 +20,7 @@
                     placeholder="Search by name or email...">
             </div>
 
-            {{-- 2. ADD PEOPLE DROPDOWN (Lecturer Only) --}}
+            {{-- ADD PEOPLE DROPDOWN (Lecturer Only) --}}
             @if(Auth::user()->role === 'lecturer')
                 <div x-data="{ open: false }" @click.away="open = false" @member-added.window="open = false" class="relative">
 
@@ -94,8 +93,7 @@
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <ul class="divide-y divide-gray-100">
 
-            {{-- 1. LECTURER (Always Top) --}}
-            {{-- Kita asumsikan Dosen tidak terpengaruh filter lokal siswa, agar user selalu tahu siapa dosennya --}}
+            {{-- LECTURER (Always Top) --}}
             <li class="p-5 hover:bg-gray-50 transition flex items-center justify-between group">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
@@ -129,7 +127,7 @@
                 </div>
             </li>
 
-            {{-- 2. STUDENTS --}}
+            {{-- STUDENTS --}}
             @foreach($class->students as $student)
                 <li class="p-5 hover:bg-gray-50 transition flex items-center justify-between group">
                     <div class="flex items-center">
