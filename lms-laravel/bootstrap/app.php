@@ -12,12 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
-        // Middleware Package Bepsvpt (Biar tetap jalan kalau ada fitur spesifik yang dipakai)
         $middleware->append(\Bepsvpt\SecureHeaders\SecureHeadersMiddleware::class);
-
-        // Middleware CSP dari Spatie (Khusus CSP)
         $middleware->append(\Spatie\Csp\AddCspHeaders::class);
-        // Ini akan menimpa/melengkapi header yang mungkin terlewat oleh package lain
         $middleware->append(\App\Http\Middleware\EnsureSecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {

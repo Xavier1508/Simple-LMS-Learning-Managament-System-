@@ -18,7 +18,6 @@ class FixMissingSessions extends Command
     {
         $this->info('Checking for classes with missing sessions...');
 
-        // Ambil semua kelas yang tidak punya sesi
         $classes = CourseClass::withCount('sessions')->having('sessions_count', 0)->get();
 
         if ($classes->isEmpty()) {
@@ -31,8 +30,7 @@ class FixMissingSessions extends Command
         $bar->start();
 
         foreach ($classes as $class) {
-            // Logic Generate Session (Sama seperti di CourseManager)
-            $startDate = Carbon::now()->next('Monday')->setTime(13, 0); // Mulai Senin depan
+            $startDate = Carbon::now()->next('Monday')->setTime(13, 0);
 
             for ($i = 1; $i <= 13; $i++) {
                 $isOnsite = $i % 2 != 0;

@@ -33,7 +33,6 @@ use Illuminate\Support\Facades\Mail;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    // Tambahan: Masukkan trait MassPrunable di sini
     use HasFactory, MassPrunable, Notifiable;
 
     protected $fillable = [
@@ -100,7 +99,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendPasswordResetNotification($token)
     {
-        // Kita kirim email menggunakan class ResetPasswordMail yang baru kita buat
         Mail::to($this->email)->send(new ResetPasswordMail($token, $this->email));
     }
 }

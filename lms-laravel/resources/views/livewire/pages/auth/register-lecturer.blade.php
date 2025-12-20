@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use App\Livewire\Traits\Recaptcha\WithRecaptcha;
+use Illuminate\Support\Facades\RateLimiter;
+
 
 new #[Layout('layouts.guest')] class extends Component
 {
@@ -66,12 +68,9 @@ new #[Layout('layouts.guest')] class extends Component
         if ($this->register_step === 1) {
             $this->verifyRecaptcha('register_lecturer');
 
-            // GABUNGKAN KODE NEGARA + NOMOR TELEPON
-            // Hapus angka 0 di depan jika user mengetik 0812...
             $cleanPhone = ltrim($this->phone_input, '0');
             $fullPhoneNumber = $this->country_code . $cleanPhone;
 
-            // Masukkan ke property phone_number untuk validasi final
             $this->phone_number = $fullPhoneNumber;
 
             $validated = $this->validate([
@@ -100,7 +99,7 @@ new #[Layout('layouts.guest')] class extends Component
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
-                'phone_number' => $fullPhoneNumber, // Simpan nomor yang sudah digabung
+                'phone_number' => $fullPhoneNumber,
                 'password' => Hash::make($validated['password']),
                 'role' => 'lecturer',
                 'lecturer_code' => $code,
@@ -127,12 +126,24 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function resendOtp(): void
     {
+        $key = 'resend-otp:' . $this->email . '|' . request()->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 3)) { // max 3x per menit
+            $seconds = RateLimiter::availableIn($key);
+            session()->flash('error', "Tunggu $seconds detik sebelum kirim ulang.");
+            return;
+        }
+
+        RateLimiter::hit($key, 60); // window 60 detik
+
         if ($this->register_step === 2) {
             if (!$this->user) {
                 $this->user = User::where('email', $this->email)->first();
             }
+
             if ($this->user) {
                 $otp = $this->generateOtp();
+
                 $this->user->forceFill([
                     'otp_code' => $otp,
                     'otp_expires_at' => Carbon::now()->addSeconds(90),
@@ -147,6 +158,7 @@ new #[Layout('layouts.guest')] class extends Component
             }
         }
     }
+
 
 }; ?>
 
