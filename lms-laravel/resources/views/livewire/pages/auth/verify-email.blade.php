@@ -29,8 +29,6 @@ new #[Layout('layouts.guest')] class extends Component
             $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
             return;
         }
-        // CATATAN: Auto-send dihapus di sini untuk mencegah spam saat refresh.
-        // Pengiriman sudah ditangani oleh LoginForm saat login, atau tombol Resend di bawah.
     }
 
     public function checkStatus(Logout $logout): void
@@ -50,9 +48,9 @@ new #[Layout('layouts.guest')] class extends Component
 
         $lifespan = $user->created_at->diffInSeconds(Carbon::now());
 
-        if ($lifespan > 300) { // 300 detik = 5 menit
-            $user->delete(); // Hapus User dari DB
-            $logout();       // Logout Session
+        if ($lifespan > 300) {
+            $user->delete();
+            $logout();
 
             $this->js("
                 alert('KEAMANAN: Waktu verifikasi habis (Batas 5 Menit).\\n\\nAkun Anda telah dihapus otomatis dari sistem demi keamanan.\\nSilakan lakukan registrasi ulang.');

@@ -21,23 +21,20 @@ trait WithRecaptcha
      * @param  string  $action  Nama aksi untuk report di dashboard Google (opsional)
      * @param  float|null  $minScore  Skor minimal (0.0 - 1.0). Null = otomatis detect env.
      *
-     * @throws ValidationException Jika verifikasi gagal
+     * @throws ValidationException
      */
     public function verifyRecaptcha(string $action = 'submit', ?float $minScore = null): void
     {
         // 1. Validasi Keberadaan Token (Dari Frontend)
         if (empty($this->recaptchaToken)) {
-            // Jika token kosong, biasanya JS belum selesai load atau diblokir adblock
             throw ValidationException::withMessages([
                 'recaptchaToken' => 'Verifikasi keamanan belum selesai. Silakan tunggu sebentar dan klik lagi.',
             ]);
         }
 
-        // 2. Cek Konfigurasi (Agar tidak error 500 jika lupa set .env)
         $secret = config('services.recaptcha.secret');
         if (empty($secret)) {
             if (app()->isLocal()) {
-                // Di local, kita biarkan lewat (bypass) jika config belum ada, biar ga ribet develop
                 Log::warning('Recaptcha Secret Key belum di-set di .env, verifikasi di-bypass.');
 
                 return;
@@ -91,7 +88,7 @@ trait WithRecaptcha
 
         if ($score < $threshold) {
             Log::warning('Recaptcha Low Score Detected', [
-                'email' => $this->email ?? 'unknown', // Mencoba log email jika ada property email
+                'email' => $this->email ?? 'unknown',
                 'score' => $score,
                 'ip' => request()->ip(),
             ]);
@@ -101,17 +98,12 @@ trait WithRecaptcha
             ]);
         }
 
-        // 6. Cek Action (Opsional tapi disarankan)
-        // Memastikan token yang digenerate untuk action 'login' tidak dipakai buat 'register'
         if (isset($body['action']) && $body['action'] !== $action) {
             Log::warning('Recaptcha Action Mismatch', ['expected' => $action, 'received' => $body['action']]);
             throw ValidationException::withMessages([
                 'recaptchaToken' => 'Invalid Security Action.',
             ]);
         }
-
-        // Jika sampai sini, berarti LULUS.
-        // Reset token biar tidak dipakai ulang (Replay Attack Prevention)
         $this->recaptchaToken = '';
     }
 }

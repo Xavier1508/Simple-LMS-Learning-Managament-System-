@@ -16,7 +16,7 @@ class LecturerCredentials extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public array $data, // Akan berisi 'lecturer_code' DAN 'otp_code'
+        public array $data,
     ) {}
 
     public function envelope(): Envelope
